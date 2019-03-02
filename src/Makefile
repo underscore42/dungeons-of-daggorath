@@ -1,4 +1,4 @@
-CC      = @gcc -Wall -ansi
+CC      = @g++ -Wall -O2
 CCLINK  = -lGL -lGLU -lSDL -lSDL_mixer
 CCFLAGS = -c -DLINUX
 

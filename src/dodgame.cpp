@@ -50,7 +50,7 @@ extern Scheduler	scheduler;
 
 // Constructor
 dodGame::dodGame() : LEVEL(2), AUTFLG(true), hasWon(false),
-					 DEMOPTR(0), demoRestart(true)
+					 demoRestart(true), DEMOPTR(0)
 {
 	Utils::LoadFromHex(DEMO_CMDS,
 //		D_LOOK
@@ -146,7 +146,7 @@ void dodGame::COMINI()
 		oslink.process_events();
 		ticks2 = SDL_GetTicks();
 	} while (ticks2 < ticks1 + viewer.prepPause);
-	
+
 	creature.NEWLVL();
 	if (AUTFLG)
 	{
@@ -196,7 +196,7 @@ void dodGame::Restart()
 		oslink.process_events();
 		ticks2 = SDL_GetTicks();
 	} while (ticks2 < ticks1 + 2500);
-	
+
 	creature.NEWLVL();
 	INIVU();
 	viewer.PROMPT();

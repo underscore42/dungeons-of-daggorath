@@ -41,12 +41,13 @@ extern Scheduler	scheduler;
 extern Parser		parser;
 
 // Constructor
-OS_Link::OS_Link() : width(0), height(0), bpp(0), flags(0),
+OS_Link::OS_Link() : width(0), height(0),
+					 gamefileLen(50), keylayout(0), keyLen(256),
 					 audio_rate(44100), audio_format(AUDIO_S16),
 					 audio_channels(2), audio_buffers(512),
-					 gamefileLen(50), keylayout(0), keyLen(256)
+					 bpp(0), flags(0)
 {
-	printf ("OS_LINK Constructor");
+	printf ("OS_LINK Constructor\n");
 #define MACOSX
 #ifdef MACOSX
 	strcpy(pathSep,"/");
@@ -72,7 +73,7 @@ void OS_Link::init()
 	loadOptFile();
 
 	Uint32 ticks1, ticks2;
-	const SDL_VideoInfo * info = '\0';
+	const SDL_VideoInfo * info = 0;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0)
 	{
 		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
@@ -92,7 +93,7 @@ void OS_Link::init()
 
 	Mix_AllocateChannels(4);
 	Mix_Volume(-1, MIX_MAX_VOLUME);
-	
+
 	info = SDL_GetVideoInfo();
 	if(!info)
 	{
@@ -334,7 +335,7 @@ bool OS_Link::main_menu()
 
  scheduler.pause(true);
  viewer.drawMenu(mainMenu, col, row);
- 
+
  do
    {
    SDL_Event event;
@@ -445,7 +446,7 @@ switch(menu_id)
   case CONFIG_MENU_FULL_SCREEN:
    //Full Screen
    {
-   char *menuList[]={ "ON", "OFF" };
+   const char *menuList[]={ "ON", "OFF" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 2))
     {
@@ -470,7 +471,7 @@ switch(menu_id)
   case CONFIG_MENU_VIDEO_RES:
    // Video Res
    {
-   char *menuList[]={ "640X480", "800X600", "1024X768", "1280X1024" };
+   const char *menuList[]={ "640X480", "800X600", "1024X768", "1280X1024" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 4))
     {
@@ -501,7 +502,7 @@ switch(menu_id)
   case CONFIG_MENU_GRAPHICS:
     // Graphics (Normal /HIRes / vect)
    {
-   char *menuList[]={ "NORMAL GRAPHICS", "HIRES GRAPHICS", "VECTOR GRAPHICS" };
+   const char *menuList[]={ "NORMAL GRAPHICS", "HIRES GRAPHICS", "VECTOR GRAPHICS" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 3))
     {
@@ -530,7 +531,7 @@ switch(menu_id)
   case CONFIG_MENU_COLOR:
    // Color (B&W / Art. / Full)
    {
-   char *menuList[]={ "BLACK WHITE" };
+   const char *menuList[]={ "BLACK WHITE" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 1))
     {
@@ -554,7 +555,7 @@ switch(menu_id)
   case CONFIG_MENU_SAVEDIR:
    // Save Dir
    {
-   char *menuList[]={ "EDIT OPTS.INI FILE" };
+   const char *menuList[]={ "EDIT OPTS.INI FILE" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 1))
     {
@@ -569,7 +570,7 @@ switch(menu_id)
   case CONFIG_MENU_CREATURE_SPEED:
     // Creature Speed
    {
-   char *menuList[2] = {"COCO", "CUSTOM"};
+   const char *menuList[2] = {"COCO", "CUSTOM"};
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 2))
     {
@@ -595,7 +596,7 @@ switch(menu_id)
   case CONFIG_MENU_REGEN_SPEED:
    // Regen Speed
    {
-   char *menuList[] = { "5 MINUTES", "3 MINUTES", "1 MINUTE" };
+   const char *menuList[] = { "5 MINUTES", "3 MINUTES", "1 MINUTE" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 3))
      {
@@ -622,7 +623,7 @@ switch(menu_id)
   case CONFIG_MENU_RANDOM_MAZE:
    // Random Mazes
    {
-   char *menuList[]={ "ON", "OFF" };
+   const char *menuList[]={ "ON", "OFF" };
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 2))
     {
@@ -643,7 +644,7 @@ switch(menu_id)
   case CONFIG_MENU_SND_MODE:
    // Sound Style (Sync, Stereo)
    {
-   char *menuList[2] = {"STEREO", "MONO"};
+   const char *menuList[2] = {"STEREO", "MONO"};
 
    switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 2))
     {
@@ -681,7 +682,7 @@ switch(menu_id)
   case HELP_MENU_HOWTOPLAY:
    // How to play
    {
-   char *menuList[]={ "SEE FILE HOWTOPLAY.TXT" };
+   const char *menuList[]={ "SEE FILE HOWTOPLAY.TXT" };
 
    menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 1);
    }
@@ -691,7 +692,7 @@ switch(menu_id)
   case HELP_MENU_LICENSE:
    // License
    {
-   char *menuList[]={ "SEE FILE README.TXT" };
+   const char *menuList[]={ "SEE FILE README.TXT" };
 
    menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 1);
    }
@@ -739,7 +740,7 @@ switch(menu_id)
 *             list     - An array of strings (the list to be chosen from
 *             listSize - The size of the array
 ******************************************************************************/
-int OS_Link::menu_list(int x, int y, char *title, char *list[], int listSize)
+int OS_Link::menu_list(int x, int y, const char *title, const char *list[], int listSize)
  {
  int currentChoice = 0;
 
@@ -798,7 +799,7 @@ int OS_Link::menu_list(int x, int y, char *title, char *list[], int listSize)
 *  Returns: The value the user entered, or if they hit escape, the original
 *           value.
 ******************************************************************************/
-int OS_Link::menu_scrollbar(char *title, int min, int max, int current)
+int OS_Link::menu_scrollbar(const char *title, int min, int max, int current)
  {
  int oldvalue  = current; //Save the old value in case the user escapes
  int increment = (max - min) / 31;  // 31 is the number of columns
@@ -860,7 +861,7 @@ int OS_Link::menu_scrollbar(char *title, int min, int max, int current)
 *             title     - The title of the entry
 *             maxLength - The maximum size of the entry
 ******************************************************************************/
-void OS_Link::menu_string(char *newString, char *title, int maxLength)
+void OS_Link::menu_string(char *newString, const char *title, size_t maxLength)
  {
  *newString = '\0';
  viewer.drawMenuStringTitle(title);
@@ -954,7 +955,7 @@ void OS_Link::loadOptFile(void)
  loadDefaults(); // In case some variables aren't in the opts file, and if no file exists
 
  sprintf(fn, "%s%s%s", confDir, pathSep, "opts.ini");
-	
+
  fin.open(fn);
  if (!fin)
  {
@@ -1132,7 +1133,7 @@ void OS_Link::loadDefaults(void)
  creature.creSpeedMul = 200;
  creature.UpdateCreSpeed();
  strcpy(savedDir, "saved");
- FullScreen = true;
+ FullScreen = false;
  width = 1024;
  creatureRegen = 5;
  scheduler.updateCreatureRegen(creatureRegen);
@@ -1200,7 +1201,7 @@ void OS_Link::changeVideoRes(int newWidth)
   height = newHeight;
   crd.setCurWH((double) width);
   }
-  
+
  viewer.setup_opengl();
  glMatrixMode(GL_MODELVIEW);
  glLoadIdentity();
