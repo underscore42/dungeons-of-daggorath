@@ -30,59 +30,59 @@ is held by Douglas J. Morgan.
 
 #include "dod.h"
 
- // Arbitrary Length of 80, maybe be changed if needed
+// Arbitrary Length of 80, maybe be changed if needed
 #define MAX_FILENAME_LENGTH 80
 class OS_Link
 {
 public:
-	// Constructor
-	OS_Link();
+    // Constructor
+    OS_Link();
 
-	// Public Interface
-	void init();			// main entry point for dod application
-	void quitSDL(int code);	// shuts down SDL before exiting
-	void process_events();	// used mainly to retrieve keystrokes
-	bool main_menu();       // used to implement the meta-menu
-	bool saveOptFile(void);
+    // Public Interface
+    void init();            // main entry point for dod application
+    void quitSDL(int code); // shuts down SDL before exiting
+    void process_events();  // used mainly to retrieve keystrokes
+    bool main_menu();       // used to implement the meta-menu
+    bool saveOptFile(void);
 
-	// Public Data Fields
-	SDL_Window* window;
-	int		width;	// actual screen width after video setup
-	int		height;	// same for height
-	int     volumeLevel; // Volume level
+    // Public Data Fields
+    SDL_Window* window;
+    int     width;  // actual screen width after video setup
+    int     height; // same for height
+    int     volumeLevel; // Volume level
 
-	char	gamefile[50];
-	int		gamefileLen;
-	char	pathSep[2];
-	FILE *	fptr;
-	char	confDir[5];
-	char	soundDir[6];
-	char	savedDir[MAX_FILENAME_LENGTH + 1];
-	dodBYTE	keys[256];
-	int		keyLen;
+    char    gamefile[50];
+    int     gamefileLen;
+    char    pathSep[2];
+    FILE *  fptr;
+    char    confDir[5];
+    char    soundDir[6];
+    char    savedDir[MAX_FILENAME_LENGTH + 1];
+    dodBYTE keys[256];
+    int     keyLen;
 
-	int		audio_rate;
-	Uint16	audio_format;
-	int		audio_channels;
-	int		audio_buffers;
+    int     audio_rate;
+    Uint16  audio_format;
+    int     audio_channels;
+    int     audio_buffers;
 
 private:
-	// Internal Implementation
-	void handle_key_down(SDL_Keysym * keysym);	// keyboard handler
-	bool menu_return(int, int, menu);		// Used by main menu
-	int  menu_list(int x, int y, const char *title, const char *list[], int listSize);
-	void menu_string(char *newString, const char *title, size_t maxLength);
-	int  menu_scrollbar(const char *title, int min, int max, int current);
-	void loadOptFile(void);
-	void loadDefaults(void);
-	void changeFullScreen(void);
-	void changeVideoRes(int newWidth);
+    // Internal Implementation
+    void handle_key_down(SDL_Keysym * keysym);  // keyboard handler
+    bool menu_return(int, int, menu);       // Used by main menu
+    int  menu_list(int x, int y, const char *title, const char *list[], int listSize);
+    void menu_string(char *newString, const char *title, size_t maxLength);
+    int  menu_scrollbar(const char *title, int min, int max, int current);
+    void loadOptFile(void);
+    void loadDefaults(void);
+    void changeFullScreen(void);
+    void changeVideoRes(int newWidth);
 
-	// Data Fields
-	int  bpp;	    // bits per pixel
-	int  flags;	    // SDL flags
-	bool FullScreen;    // FullScreen
-	int  creatureRegen; // Creature Regen Speed
+    // Data Fields
+    int  bpp;       // bits per pixel
+    int  flags;     // SDL flags
+    bool FullScreen;    // FullScreen
+    int  creatureRegen; // Creature Regen Speed
 };
 
 #endif // OS_LINK_HEADER

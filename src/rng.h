@@ -23,53 +23,59 @@ is held by Douglas J. Morgan.
 class RNG
 {
 public:
-	// Constructor
-	RNG();
+    // Constructor
+    RNG();
 
-	// Accessors
-	dodBYTE RANDOM();
-	dodBYTE getSEED(int idx) { return SEED[idx]; }
+    // Accessors
+    dodBYTE RANDOM();
+    dodBYTE getSEED(int idx)
+    {
+        return SEED[idx];
+    }
 
-	// Mutators
-	void setSEED(int idx, dodBYTE val) { SEED[idx] = val; }
-	void setSEED(dodBYTE val0, dodBYTE val1, dodBYTE val2)
-	{
-		SEED[0] = val0;
-		SEED[1] = val1;
-		SEED[2] = val2;
-	}
+    // Mutators
+    void setSEED(int idx, dodBYTE val)
+    {
+        SEED[idx] = val;
+    }
+    void setSEED(dodBYTE val0, dodBYTE val1, dodBYTE val2)
+    {
+        SEED[0] = val0;
+        SEED[1] = val1;
+        SEED[2] = val2;
+    }
 
-	dodBYTE SEED[3];
-	dodBYTE carry;
+    dodBYTE SEED[3];
+    dodBYTE carry;
 
 private:
-	// Internal Implementation
-	dodBYTE lsl(dodBYTE c);
-	dodBYTE lsr(dodBYTE c);
-	dodBYTE rol(dodBYTE c);
+    // Internal Implementation
+    dodBYTE lsl(dodBYTE c);
+    dodBYTE lsr(dodBYTE c);
+    dodBYTE rol(dodBYTE c);
 };
 
 // Inline Definitons
 inline dodBYTE RNG::lsl(dodBYTE c)
 {
-	carry = (((c & 128) == 128) ? 1 : 0);
-	return c << 1;
+    carry = (((c & 128) == 128) ? 1 : 0);
+    return c << 1;
 }
 
 inline dodBYTE RNG::lsr(dodBYTE c)
 {
-	carry = (((c & 1) == 1) ? 1 : 0);
-	return c >> 1;
+    carry = (((c & 1) == 1) ? 1 : 0);
+    return c >> 1;
 }
 
 inline dodBYTE RNG::rol(dodBYTE c)
 {
-	dodBYTE cry;
-	cry = (((c & 128) == 128) ? 1 : 0);
-	c <<= 1;
-	c += carry;
-	carry = cry;
-	return c;
+    dodBYTE cry;
+    cry = (((c & 128) == 128) ? 1 : 0);
+    c <<= 1;
+    c += carry;
+    carry = cry;
+    return c;
 }
 
 #endif // DOD_RNG_HEADER
