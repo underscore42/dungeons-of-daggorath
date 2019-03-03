@@ -432,8 +432,9 @@ bool Scheduler::keyCheck()
 		case SDL_QUIT:
 			oslink.quitSDL(0); // eventually change to meta-menu
 			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
+		case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(oslink.window);
 			break;
 		}
 	}
@@ -441,7 +442,7 @@ bool Scheduler::keyCheck()
 }
 
 // Used by wizard fade in/out function
-bool Scheduler::keyHandler(SDL_keysym * keysym)
+bool Scheduler::keyHandler(SDL_Keysym * keysym)
 {
 	bool rc;
 
@@ -474,8 +475,9 @@ bool Scheduler::EscCheck()
 		case SDL_QUIT:
 			oslink.quitSDL(0); // eventually change to meta-menu
 			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
+		case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(oslink.window);
 			break;
 		}
 	}
@@ -483,7 +485,7 @@ bool Scheduler::EscCheck()
 }
 
 // Used by wizard fade in/out function
-bool Scheduler::EscHandler(SDL_keysym * keysym)
+bool Scheduler::EscHandler(SDL_Keysym * keysym)
 {
 	bool rc;
 

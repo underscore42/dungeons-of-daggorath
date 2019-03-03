@@ -19,6 +19,8 @@ is held by Douglas J. Morgan.
 
 #include "dod.h"
 
+#include <SDL2/SDL_keyboard.h>
+
 class Scheduler
 {
 public:
@@ -38,16 +40,16 @@ public:
 	void		deathFadeLoop();
 	void		winFadeLoop();
 	bool		keyCheck();
-	bool		keyHandler(SDL_keysym * keysym);
+	bool		keyHandler(SDL_Keysym * keysym);
 	void		Reset();
 	void		SAVE();
 	void		LOAD();
 	void		LoadSounds();
 	bool		EscCheck();
-	bool		EscHandler(SDL_keysym * keysym);
+	bool		EscHandler(SDL_Keysym * keysym);
 	void		pause(bool state);
 	void		updateCreatureRegen(int newTime);
-	
+
 	// Public Data Fields
 	Task	TCBLND[38];
 

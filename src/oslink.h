@@ -21,8 +21,8 @@ is held by Douglas J. Morgan.
 #define OS_LINK_HEADER
 
 #ifdef LINUX
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #else
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -46,6 +46,7 @@ public:
 	bool saveOptFile(void);
 
 	// Public Data Fields
+	SDL_Window* window;
 	int		width;	// actual screen width after video setup
 	int		height;	// same for height
 	int     volumeLevel; // Volume level
@@ -58,7 +59,6 @@ public:
 	char	soundDir[6];
 	char	savedDir[MAX_FILENAME_LENGTH + 1];
 	dodBYTE	keys[256];
-	int		keylayout;	// 0 = QWERTY, 1 = Dvorak
 	int		keyLen;
 
 	int		audio_rate;
@@ -68,7 +68,7 @@ public:
 
 private:
 	// Internal Implementation
-	void handle_key_down(SDL_keysym * keysym);	// keyboard handler
+	void handle_key_down(SDL_Keysym * keysym);	// keyboard handler
 	bool menu_return(int, int, menu);		// Used by main menu
 	int  menu_list(int x, int y, const char *title, const char *list[], int listSize);
 	void menu_string(char *newString, const char *title, size_t maxLength);

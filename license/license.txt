@@ -24,18 +24,3 @@ The game did very well for us.  I give it to the world with thanks to all who bo
 There is one existing copy of the original source code.  Anyone willing to pay for the copying of the listing (at Kinko's) and shipment to them, who intends to use it to enhance or improve the emulator versions of the game is welcome to it. 
 
 Verification of this license grant or requests for the listing can be made by contacting Louis Jordan,   Thank you.
-
-==========
-
-This product makes extensive use of the Simple DirectMedia Layer library, which is licensed under the GNU LGPL.  It also uses the SDL_Mixer library, which likewise is licensed under the GNU LGPL.
-
-You can find the GNU LGPL licence in the file SDL_LICENSE.txt in this directory.
-
-The GNU LGPL license applys to SDL and SDL_Mixer, not to the Daggorath PC-Port Project.  It's included here to comply with the license's terms for usage of these two libraries.
-
-You can download a zipped copy of the SDL and SDL_Mixer source code from the same place you downloaded this project:
-
-http://mspencer.net/daggorath/builds/
-
-Rick Hunerlach
-November 14, 2002

@@ -24,6 +24,7 @@ is held by Douglas J. Morgan.
 #include "creature.h"
 #include "enhanced.h"
 
+#include <GL/glu.h> // for gluOrtho2D
 
 extern Creature		creature;
 extern Dungeon		dungeon;
@@ -347,6 +348,7 @@ void Viewer::Reset()
 // Public Interface
 void Viewer::setup_opengl()
 {
+	SDL_GLContext Context = SDL_GL_CreateContext(oslink.window);
 //	glEnable(GL_LINE_SMOOTH);
 	glDisable(GL_LINE_SMOOTH);
 	glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
@@ -402,7 +404,7 @@ void Viewer::draw_game()
 		glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
 		glLoadIdentity();
 		MAPPER();
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 	else
 	{
@@ -438,7 +440,7 @@ void Viewer::draw_game()
 		// Draw Text Area
 		drawArea(&TXTPRI);
 
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 	UPDATE = 0;
 }
@@ -504,7 +506,7 @@ bool Viewer::ShowFade(int fadeMode)
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(wiz);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 
 		ticks1 = SDL_GetTicks();
 		do
@@ -546,7 +548,7 @@ bool Viewer::ShowFade(int fadeMode)
 	glLoadIdentity();
 	drawVectorList(wiz);
 	drawArea(&TXTPRI);
-	SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(oslink.window);
 
 	if (fadeMode < 3)
 	{
@@ -564,7 +566,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glLoadIdentity();
 			drawVectorList(wiz);
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			if (fadeMode != 2 && scheduler.keyCheck())
 			{
@@ -582,7 +584,7 @@ bool Viewer::ShowFade(int fadeMode)
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(wiz);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 
 		// do crash
 		Mix_PlayChannel(fadChannel, creature.kaboom, 0);
@@ -613,7 +615,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glColor3fv(fgColor);
 			glLoadIdentity();
 			drawVectorList(wiz);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			ticks1 = SDL_GetTicks();
 			do
@@ -650,7 +652,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glLoadIdentity();
 			drawVectorList(wiz);
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 		  }
 		clearArea(&TXTPRI);
 		while(SDL_PollEvent(&event)) ; // clear event buffer
@@ -684,7 +686,7 @@ bool Viewer::draw_fade()
 
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
@@ -714,7 +716,7 @@ bool Viewer::draw_fade()
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		delay2 = SDL_GetTicks();
 		if (delay2 > delay + midPause)
 		{
@@ -762,13 +764,13 @@ void Viewer::enough_fade()
 
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
 			displayEnough();
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			// do sound crash
 			Mix_HaltChannel(fadChannel);
@@ -797,7 +799,7 @@ void Viewer::enough_fade()
 		drawVectorList(W1_VLA);
 		VCTFAD += fadeVal;
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		delay2 = SDL_GetTicks();
 		if (delay2 > delay + midPause)
 		{
@@ -838,7 +840,7 @@ void Viewer::death_fade(int WIZ[])
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(WIZ);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
@@ -847,7 +849,7 @@ void Viewer::death_fade(int WIZ[])
 			Mix_Volume(fadChannel, oslink.volumeLevel);
 			glLoadIdentity();
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
 			while (Mix_Playing(fadChannel) == 1)
 			{
@@ -866,7 +868,7 @@ void Viewer::death_fade(int WIZ[])
 		glLoadIdentity();
 		drawVectorList(WIZ);
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 }
 
@@ -2094,7 +2096,7 @@ void Viewer::drawMenu(menu mainMenu, int menu_id, int highlight)
    }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2144,7 +2146,7 @@ void Viewer::drawMenuList(int x, int y, const char *title, const char *list[], i
    }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 
@@ -2185,7 +2187,7 @@ void Viewer::drawMenuScrollbar(const char *title, int current)
   }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2205,7 +2207,7 @@ void Viewer::drawMenuStringTitle(const char *title)
  drawString(0, 0, title, strlen(title));
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2221,7 +2223,7 @@ void Viewer::drawMenuString(const char *currentString)
  drawString(strlen(currentString), 2, "_", 1);
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2254,5 +2256,5 @@ void Viewer::aboutBox(void)
  drawString(1,18, "MANY OTHERS NOT MENTIONED HERE!", 31);
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }

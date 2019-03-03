@@ -42,7 +42,7 @@ extern Parser		parser;
 
 // Constructor
 OS_Link::OS_Link() : width(0), height(0),
-					 gamefileLen(50), keylayout(0), keyLen(256),
+					 gamefileLen(50), keyLen(256),
 					 audio_rate(44100), audio_format(AUDIO_S16),
 					 audio_channels(2), audio_buffers(512),
 					 bpp(0), flags(0)
@@ -73,7 +73,6 @@ void OS_Link::init()
 	loadOptFile();
 
 	Uint32 ticks1, ticks2;
-	const SDL_VideoInfo * info = 0;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0)
 	{
 		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
@@ -94,89 +93,46 @@ void OS_Link::init()
 	Mix_AllocateChannels(4);
 	Mix_Volume(-1, MIX_MAX_VOLUME);
 
-	info = SDL_GetVideoInfo();
-	if(!info)
-	{
-		fprintf(stderr, "Video query failed: %s\n", SDL_GetError());
-		quitSDL(1);
-	}
-	bpp = info->vfmt->BitsPerPixel;
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	flags = SDL_OPENGL;
+	flags = SDL_WINDOW_OPENGL;
 
 	changeVideoRes(width); // All changing video res code was moved here
-	SDL_WM_SetCaption("Dungeons of Daggorath", "");
 
 	memset(keys, parser.C_SP, keyLen);
 
-	if (keylayout == 0) // QWERTY
-	{
-		keys[SDLK_a] = 'A';
-		keys[SDLK_b] = 'B';
-		keys[SDLK_c] = 'C';
-		keys[SDLK_d] = 'D';
-		keys[SDLK_e] = 'E';
-		keys[SDLK_f] = 'F';
-		keys[SDLK_g] = 'G';
-		keys[SDLK_h] = 'H';
-		keys[SDLK_i] = 'I';
-		keys[SDLK_j] = 'J';
-		keys[SDLK_k] = 'K';
-		keys[SDLK_l] = 'L';
-		keys[SDLK_m] = 'M';
-		keys[SDLK_n] = 'N';
-		keys[SDLK_o] = 'O';
-		keys[SDLK_p] = 'P';
-		keys[SDLK_q] = 'Q';
-		keys[SDLK_r] = 'R';
-		keys[SDLK_s] = 'S';
-		keys[SDLK_t] = 'T';
-		keys[SDLK_u] = 'U';
-		keys[SDLK_v] = 'V';
-		keys[SDLK_w] = 'W';
-		keys[SDLK_x] = 'X';
-		keys[SDLK_y] = 'Y';
-		keys[SDLK_z] = 'Z';
-		keys[SDLK_BACKSPACE] = parser.C_BS;
-		keys[SDLK_RETURN] = parser.C_CR;
-		keys[SDLK_SPACE] = parser.C_SP;
-	}
-	else if (keylayout == 1) // Dvorak
-	{
-		keys[SDLK_a] = 'A';
-		keys[SDLK_n] = 'B';
-		keys[SDLK_i] = 'C';
-		keys[SDLK_h] = 'D';
-		keys[SDLK_d] = 'E';
-		keys[SDLK_y] = 'F';
-		keys[SDLK_u] = 'G';
-		keys[SDLK_j] = 'H';
-		keys[SDLK_g] = 'I';
-		keys[SDLK_c] = 'J';
-		keys[SDLK_v] = 'K';
-		keys[SDLK_p] = 'L';
-		keys[SDLK_m] = 'M';
-		keys[SDLK_l] = 'N';
-		keys[SDLK_s] = 'O';
-		keys[SDLK_r] = 'P';
-		keys[SDLK_x] = 'Q';
-		keys[SDLK_o] = 'R';
-		keys[SDLK_SEMICOLON] = 'S';
-		keys[SDLK_k] = 'T';
-		keys[SDLK_f] = 'U';
-		keys[SDLK_PERIOD] = 'V';
-		keys[SDLK_COMMA] = 'W';
-		keys[SDLK_b] = 'X';
-		keys[SDLK_t] = 'Y';
-		keys[SDLK_SLASH] = 'Z';
-		keys[SDLK_BACKSPACE] = parser.C_BS;
-		keys[SDLK_RETURN] = parser.C_CR;
-		keys[SDLK_SPACE] = parser.C_SP;
-	}
+  keys[SDL_SCANCODE_A] = 'A';
+  keys[SDL_SCANCODE_B] = 'B';
+  keys[SDL_SCANCODE_C] = 'C';
+  keys[SDL_SCANCODE_D] = 'D';
+  keys[SDL_SCANCODE_E] = 'E';
+  keys[SDL_SCANCODE_F] = 'F';
+  keys[SDL_SCANCODE_G] = 'G';
+  keys[SDL_SCANCODE_H] = 'H';
+  keys[SDL_SCANCODE_I] = 'I';
+  keys[SDL_SCANCODE_J] = 'J';
+  keys[SDL_SCANCODE_K] = 'K';
+  keys[SDL_SCANCODE_L] = 'L';
+  keys[SDL_SCANCODE_M] = 'M';
+  keys[SDL_SCANCODE_N] = 'N';
+  keys[SDL_SCANCODE_O] = 'O';
+  keys[SDL_SCANCODE_P] = 'P';
+  keys[SDL_SCANCODE_Q] = 'Q';
+  keys[SDL_SCANCODE_R] = 'R';
+  keys[SDL_SCANCODE_S] = 'S';
+  keys[SDL_SCANCODE_T] = 'T';
+  keys[SDL_SCANCODE_U] = 'U';
+  keys[SDL_SCANCODE_V] = 'V';
+  keys[SDL_SCANCODE_W] = 'W';
+  keys[SDL_SCANCODE_X] = 'X';
+  keys[SDL_SCANCODE_Y] = 'Y';
+  keys[SDL_SCANCODE_Z] = 'Z';
+  keys[SDL_SCANCODE_BACKSPACE] = parser.C_BS;
+  keys[SDL_SCANCODE_RETURN] = parser.C_CR;
+  keys[SDL_SCANCODE_SPACE] = parser.C_SP;
 
 	// Delay to wait for monitor to change modes if necessary
 	// This ought to be made more intelligent
@@ -242,8 +198,9 @@ void OS_Link::process_events()
 		case SDL_QUIT:
 			quitSDL(0);
 			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
+		case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
 			break;
 		}
 	}
@@ -258,14 +215,14 @@ void OS_Link::quitSDL(int code)
 }
 
 // Processes key strokes.
-void OS_Link::handle_key_down(SDL_keysym * keysym)
+void OS_Link::handle_key_down(SDL_Keysym * keysym)
 {
 	dodBYTE c;
 	if (viewer.display_mode == Viewer::MODE_MAP)
 	{
-		switch(keysym->sym)
+		switch(keysym->scancode)
 		{
-		case SDLK_ESCAPE:
+		case SDL_SCANCODE_ESCAPE:
 			main_menu();
 			break;
 		default:
@@ -278,27 +235,25 @@ void OS_Link::handle_key_down(SDL_keysym * keysym)
 	}
 	else
 	{
-		switch(keysym->sym)
+		switch(keysym->scancode)
 		{
-		case SDLK_RSHIFT:
-		case SDLK_LSHIFT:
-		case SDLK_RCTRL:
-		case SDLK_LCTRL:
-		case SDLK_RALT:
-		case SDLK_LALT:
-		case SDLK_RMETA:
-		case SDLK_LMETA:
-		case SDLK_LSUPER:
-		case SDLK_RSUPER:
-		case SDLK_MODE:
-		case SDLK_COMPOSE:
-		case SDLK_NUMLOCK:
-		case SDLK_CAPSLOCK:
-		case SDLK_SCROLLOCK:
+		case SDL_SCANCODE_RSHIFT:
+		case SDL_SCANCODE_LSHIFT:
+		case SDL_SCANCODE_RCTRL:
+		case SDL_SCANCODE_LCTRL:
+		case SDL_SCANCODE_RALT:
+		case SDL_SCANCODE_LALT:
+		case SDL_SCANCODE_LGUI:
+		case SDL_SCANCODE_RGUI:
+		case SDL_SCANCODE_MODE:
+		case SDL_SCANCODE_APPLICATION:
+		case SDL_SCANCODE_NUMLOCKCLEAR:
+		case SDL_SCANCODE_CAPSLOCK:
+		case SDL_SCANCODE_SCROLLLOCK:
 			// ignore these keys
 			return;
 
-		case SDLK_ESCAPE:
+		case SDL_SCANCODE_ESCAPE:
 			main_menu();   // Enter the meta-menu routine
                         return;
 
@@ -312,7 +267,7 @@ void OS_Link::handle_key_down(SDL_keysym * keysym)
 //		case SDLK_RIGHTBRACKET: c = '}'; break;
 
 		default:
-			c = keys[keysym->sym];
+			c = keys[keysym->scancode];
 			break;
 		}
 		parser.KBDPUT(c);
@@ -379,8 +334,9 @@ bool OS_Link::main_menu()
      case SDL_QUIT:
       quitSDL(0);
       break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
+     case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
       break;
       }
      }
@@ -717,8 +673,9 @@ switch(menu_id)
       case SDL_QUIT:
        quitSDL(0);  // Quits SDL
        break;
-      case SDL_VIDEOEXPOSE:
-       SDL_GL_SwapBuffers();
+      case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
        break;
       }
      }
@@ -778,8 +735,9 @@ int OS_Link::menu_list(int x, int y, const char *title, const char *list[], int 
      case SDL_QUIT:
       quitSDL(0);
       break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
+     case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
       break;
       }
      }
@@ -846,8 +804,9 @@ int OS_Link::menu_scrollbar(const char *title, int min, int max, int current)
       case SDL_QUIT:
        quitSDL(0);
        break;
-      case SDL_VIDEOEXPOSE:
-       SDL_GL_SwapBuffers();
+      case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
        break;
       }
     }
@@ -876,43 +835,41 @@ void OS_Link::menu_string(char *newString, const char *title, size_t maxLength)
    switch(event.type)
      {
      case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+      switch(event.key.keysym.scancode)
         {
         case SDLK_RETURN:
          return;
          break;
 
-        case SDLK_RSHIFT:
-        case SDLK_LSHIFT:
-        case SDLK_RCTRL:
-        case SDLK_LCTRL:
-        case SDLK_RALT:
-        case SDLK_LALT:
-        case SDLK_RMETA:
-        case SDLK_LMETA:
-        case SDLK_LSUPER:
-        case SDLK_RSUPER:
-        case SDLK_MODE:
-        case SDLK_COMPOSE:
-        case SDLK_NUMLOCK:
-        case SDLK_CAPSLOCK:
-        case SDLK_SCROLLOCK:
-        case SDLK_UP:
-        case SDLK_DOWN:
+        case SDL_SCANCODE_RSHIFT:
+        case SDL_SCANCODE_LSHIFT:
+        case SDL_SCANCODE_RCTRL:
+        case SDL_SCANCODE_LCTRL:
+        case SDL_SCANCODE_RALT:
+        case SDL_SCANCODE_LALT:
+        case SDL_SCANCODE_LGUI:
+        case SDL_SCANCODE_RGUI:
+        case SDL_SCANCODE_MODE:
+        case SDL_SCANCODE_APPLICATION: //was SDLK_COMPOSE:
+        case SDL_SCANCODE_NUMLOCKCLEAR:
+        case SDL_SCANCODE_CAPSLOCK:
+        case SDL_SCANCODE_SCROLLLOCK:
+        case SDL_SCANCODE_UP:
+        case SDL_SCANCODE_DOWN:
           // ignore these keys
           break;
 
-        case SDLK_BACKSPACE:
-	case SDLK_LEFT:
-	 if(strlen(newString) > 0)
-	  {
-	  *(newString + strlen(newString) - 1) = '\0';
-          viewer.drawMenuStringTitle(title);  // Update with the new word
-          viewer.drawMenuString(newString);
-	  }
+        case SDL_SCANCODE_BACKSPACE:
+        case SDL_SCANCODE_LEFT:
+          if(strlen(newString) > 0)
+            {
+            *(newString + strlen(newString) - 1) = '\0';
+                  viewer.drawMenuStringTitle(title);  // Update with the new word
+                  viewer.drawMenuString(newString);
+            }
          break;
 
-        case SDLK_ESCAPE:
+        case SDL_SCANCODE_ESCAPE:
          *(newString) = '\0';
 	 return;
 	 break;
@@ -931,8 +888,9 @@ void OS_Link::menu_string(char *newString, const char *title, size_t maxLength)
      case SDL_QUIT:
       quitSDL(0);
       break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
+     case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				SDL_GL_SwapWindow(window);
       break;
       }
      }
@@ -984,10 +942,6 @@ void OS_Link::loadOptFile(void)
    else if(!strcmp(inputString, "moveDelay"))
     {
     if (1==sscanf(breakPoint, "%d", &in)) player.moveDelay = in;
-    }
-   else if(!strcmp(inputString, "keylayout"))
-    {
-    if (1==sscanf(breakPoint, "%d", &in)) keylayout = in;
     }
    else if(!strcmp(inputString, "graphicsMode"))
     {
@@ -1086,7 +1040,6 @@ bool OS_Link::saveOptFile(void)
  fout << "creatureSpeed=" << creature.creSpeedMul << endl;
  fout << "turnDelay=" << player.turnDelay << endl;
  fout << "moveDelay=" << player.moveDelay << endl;
- fout << "keylayout=" << keylayout << endl;
  fout << "volumeLevel=" << volumeLevel << endl;
  fout << "saveDirectory=" << savedDir << endl;
  fout << "fullScreen=" << FullScreen << endl;
@@ -1128,7 +1081,6 @@ void OS_Link::loadDefaults(void)
  {
  player.turnDelay = 37;
  player.moveDelay = 500;
- keylayout   = 0;
  volumeLevel = MIX_MAX_VOLUME;
  creature.creSpeedMul = 200;
  creature.UpdateCreSpeed();
@@ -1160,40 +1112,25 @@ void OS_Link::changeFullScreen(void)
 ******************************************************************************/
 void OS_Link::changeVideoRes(int newWidth)
  {
- int newHeight;
-
- SDL_Surface * surface;
- const SDL_VideoInfo * info = NULL;
- surface = SDL_GetVideoSurface();
-
- info = SDL_GetVideoInfo();
- if(!info)
-  {
-  fprintf(stderr, "Video query failed: %s\n", SDL_GetError());
-  quitSDL(1);
-  }
-
- newHeight = (int) (newWidth * 0.75);
+ int newHeight = (int) (newWidth * 0.75);
 
  if(FullScreen)
   {
-  flags |= SDL_FULLSCREEN;
+  flags |= SDL_WINDOW_FULLSCREEN;
   SDL_ShowCursor(SDL_DISABLE);
   }
  else
   {
-  flags &= ~(SDL_FULLSCREEN);
+  flags &= ~(SDL_WINDOW_FULLSCREEN);
   SDL_ShowCursor(SDL_ENABLE);
   }
 
- if((surface = SDL_SetVideoMode(newWidth, newHeight, bpp, flags)) == 0)
+  window = SDL_CreateWindow("Dungeons of Daggorath", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, newWidth, newHeight, flags);
+
+ if(window == 0)
   {
-  fprintf(stderr, "Video mode set failed: %s\nReturning to old mode\n", SDL_GetError());
-  if((surface = SDL_SetVideoMode(width, height, bpp, flags)) == 0)
-    {
-    fprintf(stderr, "Video mode set failed, this should be impossible\n Debug OS_Link.changeVideoRes\nSDL Reported %s\n", SDL_GetError());
-    exit(1);
-    }
+  fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
+  exit(1);
   }
  else
   {

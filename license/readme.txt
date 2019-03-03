@@ -22,3 +22,10 @@ http://mspencer.net/daggorath/builds/
 
 Rick Hunerlach
 November 14, 2002
+
+=========
+
+This project now uses SDL2 and SDL_Mixer 2 which are published under the zlib license.
+
+Kevin Sopp
+March 03, 2019

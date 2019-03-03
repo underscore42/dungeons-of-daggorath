@@ -52,15 +52,9 @@ The graphics mode still defaults to the original CoCo low-res mode.  This will e
 
 The 'opts.txt' file in the 'conf' directory must include 3 integers [don't use floats].  The first is a percentage of creature speed (100 makes it the same as the 0.2 speed, 200 would double it, 50 would halve it, etc.  A very small number, like 10, will make the creatures move very fast, but their sounds will still slow them down.).  The second number is the frame rate in milliseconds for the turning animation (currently 20 in version 0.2), and the third is the delay in milliseconds for the player movement animation (crrently 25 in version 0.2).  The player movement is not really an animation.  It just takes a half step, then pauses, then goes the rest of the way (or back if there's a wall there).  The the delay is basically the pause after the half step.
 
-There is a fourth line in the 'opts.txt' file, which takes either a zero for QWERTY keyboards, or one for Dvorak.  It is set to zero (QWERTY) by default.
-
 ==========
 
 Games are saved in the 'saved' subdirectory.  There is a default filename for saving and loading, so that ZSAVE by itself will create a file called 'game.dod', and ZLOAD by itself will try to load that file.  If you want, however, you can specify your own filenames, but you can only use the uppercase letters A-Z, and only a single word.  So you might want to use LEVELA, since you can't use LEVEL1.
-
-==========
-
-Because this port uses SDL, the LGPL license text is in an 'sdl' subdirectory, along with a link to download the source if you want it.
 
 ==========
 

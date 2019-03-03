@@ -1661,7 +1661,7 @@ void Player::ShowTurn(dodBYTE A)
 					viewer.drawVector((x*inc*dir)+offset,y0,(x*inc*dir)+offset,y1);
 					viewer.drawArea(&viewer.TXTSTS);
 					viewer.drawArea(&viewer.TXTPRI);
-					SDL_GL_SwapBuffers();
+					SDL_GL_SwapWindow(oslink.window);
 					redraw = false;
 				}
 			} while (scheduler.curTime < ticks1 + turnDelay);
