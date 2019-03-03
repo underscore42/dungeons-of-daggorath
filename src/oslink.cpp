@@ -299,9 +299,9 @@ bool OS_Link::main_menu()
    switch(event.type)
      {
      case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+      switch(event.key.keysym.scancode)
         {
-        case SDLK_RETURN:
+        case SDL_SCANCODE_RETURN:
 	 end = menu_return(col, row, mainMenu);
 
 	   // Used for Wizard fade functions, if it's a new game, it will trigger a key press
@@ -309,21 +309,21 @@ bool OS_Link::main_menu()
 	   return true;
 
          break;
-        case SDLK_UP:
+        case SDL_SCANCODE_UP:
 	 (row < 1) ? row = mainMenu.getMenuSize(col) - 1 : row--;
          break;
-        case SDLK_DOWN:
+        case SDL_SCANCODE_DOWN:
 	 (row > mainMenu.getMenuSize(col) - 2) ? row = 0 : row++;
          break;
-        case SDLK_LEFT:
+        case SDL_SCANCODE_LEFT:
 	 (col < 1) ? col = NUM_MENU - 1 : col--;
 	 row = 0;
          break;
-        case SDLK_RIGHT:
+        case SDL_SCANCODE_RIGHT:
 	 (col > 1) ? col = 0 : col++;
 	 row = 0;
 	 break;
-        case SDLK_ESCAPE:
+        case SDL_SCANCODE_ESCAPE:
          end = true;
 	 break;
         default:
@@ -710,21 +710,21 @@ int OS_Link::menu_list(int x, int y, const char *title, const char *list[], int 
    switch(event.type)
      {
      case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+      switch(event.key.keysym.scancode)
         {
-        case SDLK_RETURN:
+        case SDL_SCANCODE_RETURN:
          return(currentChoice);
          break;
 
-        case SDLK_UP:
+        case SDL_SCANCODE_UP:
 	 (currentChoice < 1) ? currentChoice = listSize - 1 : currentChoice--;
          break;
 
-        case SDLK_DOWN:
+        case SDL_SCANCODE_DOWN:
 	 (currentChoice > listSize - 2) ? currentChoice = 0 : currentChoice++;
          break;
 
-        case SDLK_ESCAPE:
+        case SDL_SCANCODE_ESCAPE:
 	 return(-1);
 	 break;
 
@@ -778,21 +778,21 @@ int OS_Link::menu_scrollbar(const char *title, int min, int max, int current)
     switch(event.type)
       {
       case SDL_KEYDOWN:
-       switch(event.key.keysym.sym)
+       switch(event.key.keysym.scancode)
         {
-        case SDLK_RETURN:
+        case SDL_SCANCODE_RETURN:
          return(current + min);  // Readjust back to absolute value
          break;
 
-        case SDLK_LEFT:
+        case SDL_SCANCODE_LEFT:
 	 (current > newMin) ? current -= increment : current = newMin;
          break;
 
-        case SDLK_RIGHT:
+        case SDL_SCANCODE_RIGHT:
 	 (current < newMax) ? current += increment : current = newMax;
          break;
 
-        case SDLK_ESCAPE:
+        case SDL_SCANCODE_ESCAPE:
 	 return(oldvalue);
 	 break;
 
@@ -837,7 +837,7 @@ void OS_Link::menu_string(char *newString, const char *title, size_t maxLength)
      case SDL_KEYDOWN:
       switch(event.key.keysym.scancode)
         {
-        case SDLK_RETURN:
+        case SDL_SCANCODE_RETURN:
          return;
          break;
 

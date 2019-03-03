@@ -446,9 +446,9 @@ bool Scheduler::keyHandler(SDL_Keysym * keysym)
 {
 	bool rc;
 
-	switch(keysym->sym)
+	switch(keysym->scancode)
 	{
-	case SDLK_ESCAPE:
+	case SDL_SCANCODE_ESCAPE:
 		Mix_HaltChannel(viewer.fadChannel);
 
 		rc = oslink.main_menu();  // calls the meta-menu
@@ -489,9 +489,9 @@ bool Scheduler::EscHandler(SDL_Keysym * keysym)
 {
 	bool rc;
 
-	switch(keysym->sym)
+	switch(keysym->scancode)
 	{
-	case SDLK_ESCAPE:
+	case SDL_SCANCODE_ESCAPE:
 		Mix_HaltChannel(viewer.fadChannel);
 
 		rc = oslink.main_menu();  // Calls the meta-menu
