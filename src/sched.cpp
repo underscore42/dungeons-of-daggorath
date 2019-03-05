@@ -119,6 +119,8 @@ void Scheduler::SCHED()
     int result = 0;  // not currently being used
     int ctr = 0;
 
+    const Uint32 targetFrameTime = 1000 / 60; // 60 FPS
+
     // Main game execution loop
     do
     {
@@ -180,6 +182,9 @@ void Scheduler::SCHED()
             return; // Victory
         }
 
+        // Limit FPS
+        if ((SDL_GetTicks() - curTime) < targetFrameTime)
+            SDL_Delay(targetFrameTime - (SDL_GetTicks() - curTime));
     }
     while (result == 0);
 }
