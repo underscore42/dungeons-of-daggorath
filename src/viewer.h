@@ -78,13 +78,14 @@ public:
     void        drawVector(float X0, float Y0, float X1, float Y1);
     void        Reset();
     bool        ShowFade(int fadeMode);
-    void            drawMenu(menu, int, int);
+    void        drawMenu(menu, int, int);
     void        drawMenuList(int, int, const char *, const char *[], int, int);
     void        drawMenuScrollbar(const char *, int);
     void        drawMenuStringTitle(const char *);
     void        drawMenuString(const char *);
     void        aboutBox(void);
 
+public:
     // Public Data Fields
     dodBYTE     VCTFAD;
     dodBYTE     RANGE;

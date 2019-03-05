@@ -49,6 +49,8 @@ public:
     SDL_Window* window;
     int     width;  // actual screen width after video setup
     int     height; // same for height
+    int     windowed_width;  // width when we were last in windowed mode
+    int     windowed_height; // height when we were last in windowed mode
     int     volumeLevel; // Volume level
 
     char    gamefile[50];
@@ -67,6 +69,14 @@ public:
     int     audio_buffers;
 
 private:
+
+    enum WindowMode
+    {
+        WINDOWED   = 0,
+        BORDERLESS = 1,
+        FULLSCREEN = 2
+    };
+
     // Internal Implementation
     void handle_key_down(SDL_Keysym * keysym);  // keyboard handler
     bool menu_return(int, int, menu);       // Used by main menu
@@ -75,14 +85,14 @@ private:
     int  menu_scrollbar(const char *title, int min, int max, int current);
     void loadOptFile(void);
     void loadDefaults(void);
-    void changeFullScreen(void);
-    void changeVideoRes(int newWidth);
+    void createWindow(int width, int height);
+    void changeWindowMode(WindowMode newmode);
+    void changeVideoRes(int newWidth, int newHeight);
 
     // Data Fields
-    int  bpp;       // bits per pixel
-    int  flags;     // SDL flags
-    bool FullScreen;    // FullScreen
-    int  creatureRegen; // Creature Regen Speed
+    SDL_GLContext oglctx;
+    WindowMode    mode;
+    int           creatureRegen; // Creature Regen Speed
 };
 
 #endif // OS_LINK_HEADER

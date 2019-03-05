@@ -349,8 +349,6 @@ void Viewer::Reset()
 // Public Interface
 void Viewer::setup_opengl()
 {
-    SDL_GLContext Context = SDL_GL_CreateContext(oslink.window);
-//  glEnable(GL_LINE_SMOOTH);
     glDisable(GL_LINE_SMOOTH);
     glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
     glViewport(0, 0, oslink.width, oslink.height);

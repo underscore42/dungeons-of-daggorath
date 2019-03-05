@@ -29,6 +29,7 @@ using namespace std;
 #include "object.h"
 #include "creature.h"
 #include "enhanced.h"
+#include <GL/glu.h> // for gluOrtho2D
 
 extern Creature     creature;
 extern Object       object;
@@ -41,11 +42,11 @@ extern Scheduler    scheduler;
 extern Parser       parser;
 
 // Constructor
-OS_Link::OS_Link() : width(0), height(0),
+OS_Link::OS_Link() : window(0), width(0), height(0),
     gamefileLen(50), keyLen(256),
     audio_rate(44100), audio_format(AUDIO_S16),
     audio_channels(2), audio_buffers(512),
-    bpp(0), flags(0)
+    oglctx(0)
 {
     printf ("OS_LINK Constructor\n");
 #define MACOSX
@@ -72,7 +73,6 @@ void OS_Link::init()
     printf("Starting OS_Link::init()\n");
     loadOptFile();
 
-    Uint32 ticks1, ticks2;
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0)
     {
         fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
@@ -98,9 +98,9 @@ void OS_Link::init()
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    flags = SDL_WINDOW_OPENGL;
 
-    changeVideoRes(width); // All changing video res code was moved here
+    createWindow(width, height);
+    changeVideoRes(width, height);
 
     memset(keys, parser.C_SP, keyLen);
 
@@ -136,12 +136,8 @@ void OS_Link::init()
 
     // Delay to wait for monitor to change modes if necessary
     // This ought to be made more intelligent
-    ticks1 = SDL_GetTicks();
-    do
-    {
-        ticks2 = SDL_GetTicks();
-    }
-    while (ticks2 < ticks1 + 2500);
+    SDL_Delay(1000);
+
     game.COMINI();
     while (true)
     {
@@ -185,6 +181,16 @@ void OS_Link::init()
     printf("Init complete\n");
 }
 
+// Quits application
+void OS_Link::quitSDL(int code)
+{
+    Mix_CloseAudio();
+    SDL_GL_DeleteContext(oglctx);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    exit(code);
+}
+
 // Used to check for keystrokes and application termination
 void OS_Link::process_events()
 {
@@ -207,14 +213,6 @@ void OS_Link::process_events()
     }
 }
 
-// Quits application
-void OS_Link::quitSDL(int code)
-{
-    Mix_CloseAudio();
-    SDL_Quit();
-    exit(code);
-}
-
 // Processes key strokes.
 void OS_Link::handle_key_down(SDL_Keysym * keysym)
 {
@@ -232,7 +230,6 @@ void OS_Link::handle_key_down(SDL_Keysym * keysym)
             parser.KBDPUT(32); // This is a (necessary ???) hack.
             break;
         }
-
     }
     else
     {
@@ -403,24 +400,11 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
         case CONFIG_MENU_FULL_SCREEN:
             //Full Screen
         {
-            const char *menuList[] = { "ON", "OFF" };
+            const char *menuList[] = { "WINDOWED", "BORDERLESS", "FULLSCREEN" };
 
-            switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 2))
-            {
-            case 0:
-                if(!FullScreen)
-                    changeFullScreen();
-                break;
-
-            case 1:
-                if(FullScreen)
-                    changeFullScreen();
-                break;
-
-            default:
-                return false;
-                break;
-            }
+            const int displaytype = menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 3);
+            if (displaytype >= 0)
+                changeWindowMode(WindowMode(displaytype));
         }
         return false;
         break;
@@ -428,30 +412,12 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
         case CONFIG_MENU_VIDEO_RES:
             // Video Res
         {
-            const char *menuList[] = { "640X480", "800X600", "1024X768", "1280X1024" };
-
-            switch(menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 4))
-            {
-            case 0:
-                changeVideoRes(640);
-                break;
-
-            case 1:
-                changeVideoRes(800);
-                break;
-
-            case 2:
-                changeVideoRes(1024);
-                break;
-
-            case 3:
-                changeVideoRes(1280);
-                break;
-
-            default:
-                return false;
-                break;
-            }
+            const char *menuList[] = { "640X480", "800X600", "1024X768", "1280X960" };
+            const int widths[] = { 640, 800, 1024, 1280 };
+            const int heights[] = { 480, 600, 768, 960 };
+            const int offset = menu_list(menu_id * 5, item + 2, Menu.getMenuItem(menu_id, item), menuList, 4);
+            if (offset >= 0)
+                changeVideoRes(widths[offset], heights[offset]);
         }
         return false;
         break;
@@ -627,7 +593,7 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
 
         case CONFIG_MENU_DEFAULTS:
             loadDefaults();
-            changeVideoRes(width);
+            changeVideoRes(width, height);
             return true;
             break;
         }
@@ -697,6 +663,7 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
 *             title    - The title of the list
 *             list     - An array of strings (the list to be chosen from
 *             listSize - The size of the array
+*  Returns: -1 if ESC was pressed else the index of the selected element
 ******************************************************************************/
 int OS_Link::menu_list(int x, int y, const char *title, const char *list[], int listSize)
 {
@@ -974,9 +941,9 @@ void OS_Link::loadOptFile(void)
             {
                 strncpy(savedDir, "saved", MAX_FILENAME_LENGTH);
             }
-            else if(!strcmp(inputString, "fullScreen"))
+            else if(!strcmp(inputString, "windowMode"))
             {
-                if (1 == sscanf(breakPoint, "%d", &in)) FullScreen = in;
+                if (1 == sscanf(breakPoint, "%d", &in)) mode = WindowMode(in);
             }
             else if(!strcmp(inputString, "screenWidth"))
             {
@@ -1043,7 +1010,7 @@ bool OS_Link::saveOptFile(void)
     fout << "moveDelay=" << player.moveDelay << endl;
     fout << "volumeLevel=" << volumeLevel << endl;
     fout << "saveDirectory=" << savedDir << endl;
-    fout << "fullScreen=" << FullScreen << endl;
+    fout << "windowMode=" << mode << endl;
     fout << "screenWidth=" << width << endl;
     fout << "creatureRegen=" << creatureRegen << endl;
 
@@ -1086,8 +1053,9 @@ void OS_Link::loadDefaults(void)
     creature.creSpeedMul = 200;
     creature.UpdateCreSpeed();
     strcpy(savedDir, "saved");
-    FullScreen = false;
+    mode = WINDOWED;
     width = 1024;
+    height = 768;
     creatureRegen = 5;
     scheduler.updateCreatureRegen(creatureRegen);
 
@@ -1098,49 +1066,128 @@ void OS_Link::loadDefaults(void)
 /******************************************************************************
 *  Function used to swap fullscreen mode
 *
-*  Arguments: None
+*  Arguments: newmode - the new window mode
 ******************************************************************************/
-void OS_Link::changeFullScreen(void)
+void OS_Link::changeWindowMode(WindowMode newmode)
 {
-    FullScreen = !FullScreen;
-    changeVideoRes(width);
+    if (mode == newmode)
+        return;
+
+    const WindowMode oldmode = mode;
+    mode = newmode;
+
+    if (newmode == WINDOWED)
+    {
+        SDL_SetWindowFullscreen(window, 0);
+        changeVideoRes(windowed_width, windowed_height);
+    }
+    else if (newmode == BORDERLESS)
+    {
+        if (oldmode == FULLSCREEN)
+        {
+            // Because of buggy behavior in SDL2 the sane thing to do here is to
+            // switch to windowed mode first.
+            // https://bugzilla.libsdl.org/show_bug.cgi?id=3357
+            SDL_SetWindowFullscreen(window, 0);
+            // The delay is necessary, 100ms is enough on my computer.
+            SDL_Delay(250);
+        }
+
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+        int display = SDL_GetWindowDisplayIndex(window);
+        SDL_DisplayMode dispmode;
+        SDL_GetDisplayMode(display, 0, &dispmode);
+
+        changeVideoRes(dispmode.w, dispmode.h);
+    }
+    else if (newmode == FULLSCREEN)
+    {
+        if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN) != 0)
+        {
+            mode = oldmode;
+            fprintf(stderr, "SDL_SetWindowFullscreen: %s\n", SDL_GetError());
+        }
+    }
+
+    SDL_ShowCursor(newmode == WINDOWED ? SDL_ENABLE : SDL_DISABLE);
+    SDL_GL_SwapWindow(window);
+}
+
+/******************************************************************************
+*  Creates the application window and the OpenGL context
+*
+*  Arguments: width  - initial width of window
+*             height - initial height of window
+******************************************************************************/
+void OS_Link::createWindow(int width, int height)
+{
+    if (window)
+        return;
+
+    window = SDL_CreateWindow("Dungeons of Daggorath",
+                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                              width, height, SDL_WINDOW_OPENGL);
+    if (!window)
+    {
+        fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    windowed_width  = width;
+    windowed_height = height;
+
+    if (!oglctx)
+        oglctx = SDL_GL_CreateContext(window);
+
+    viewer.setup_opengl();
 }
 
 /******************************************************************************
 *  Function used to change the video resolution
 *
-*  Arguments: newWidth - The screen width to change to
+*  Arguments: newWidth  - desired screen width
+*             newHeight - desired screen height
 ******************************************************************************/
-void OS_Link::changeVideoRes(int newWidth)
+void OS_Link::changeVideoRes(int newWidth, int newHeight)
 {
-    int newHeight = (int) (newWidth * 0.75);
-
-    if(FullScreen)
+    const int scaledHeight = (int) (newWidth * 0.75);
+    if (scaledHeight > newHeight)
     {
-        flags |= SDL_WINDOW_FULLSCREEN;
-        SDL_ShowCursor(SDL_DISABLE);
-    }
-    else
-    {
-        flags &= ~(SDL_WINDOW_FULLSCREEN);
-        SDL_ShowCursor(SDL_ENABLE);
-    }
-
-    window = SDL_CreateWindow("Dungeons of Daggorath", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, newWidth, newHeight, flags);
-
-    if(window == 0)
-    {
-        fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
-        exit(1);
+        // keep 4:3 ratio by deriving the new width from the desired height
+        width  = newHeight / 0.75;
+        height = newHeight;
     }
     else
     {
         width  = newWidth;
-        height = newHeight;
-        crd.setCurWH((double) width);
+        height = scaledHeight;
     }
 
-    viewer.setup_opengl();
+    crd.setCurWH((double) width);
+
+    if (mode == BORDERLESS)
+    {
+        SDL_SetWindowSize(window, newWidth, newHeight);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        // center viewport on screen
+        glViewport((newWidth  - width ) / 2,
+                   (newHeight - height) / 2, width, height);
+
+    }
+    else if (mode == WINDOWED)
+    {
+        SDL_SetWindowSize(window, width, height);
+
+        windowed_width  = width;
+        windowed_height = height;
+
+        glViewport(0, 0, width, height);
+    }
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, width, 0, height);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
