@@ -34,10 +34,6 @@ is held by Douglas J. Morgan.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef LINUX
-#include <time.h>
-#define GetTickCount() time(NULL)
-#endif
 
 // The original source code used mostly 8-bit bytes and 16-bit
 // words for RAM variable storages.  Many of the operations in
@@ -78,25 +74,25 @@ public:
     }
 
     // Calculates absolute screen X-coordinate based on DoD X-coordinate
-    GLfloat newX(double orgX)
+    GLfloat newX(double orgX) const
     {
         return ((GLfloat) ((orgX) / orgWidth * curWidth) + (GLfloat) offX);
     }
 
     // Calculates relative screen X-coordinate based on DoD X-coordinate
-    GLfloat newXa(double orgX)
+    GLfloat newXa(double orgX) const
     {
         return ((GLfloat) ((orgX) / orgWidth * curWidth));
     }
 
     // Calculates absolute screen Y-coordinate based on DoD Y-coordinate
-    GLfloat newY(double orgY)
+    GLfloat newY(double orgY) const
     {
         return ((GLfloat)  ((orgHeight - (orgY)) / orgHeight * curHeight) + (GLfloat) offY);
     }
 
     // Calculates relative screen Y-coordinate based on DoD Y-coordinate
-    GLfloat newYa(double orgY)
+    GLfloat newYa(double orgY) const
     {
         return ((GLfloat)  ((orgY) / orgHeight * curHeight));
     }
@@ -534,13 +530,13 @@ public:
     }
 
     // Retrieves the menu name based on an id
-    char *getMenuName(int menu_id)
+    const char *getMenuName(int menu_id) const
     {
         return &MENU_NAME[menu_id][0];
     }
 
     // Retrieves the menu item specified
-    char *getMenuItem(int menu_id, int item)
+    const char *getMenuItem(int menu_id, int item) const
     {
         switch(menu_id)
         {
@@ -558,7 +554,7 @@ public:
     }
 
     // Returns the size of the specified menu
-    int getMenuSize(int menu_id)
+    int getMenuSize(int menu_id) const
     {
         return MENU_SIZE[menu_id];
     }

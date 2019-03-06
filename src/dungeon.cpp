@@ -27,6 +27,11 @@ extern dodGame      game;
 
 #include <stdio.h>
 
+#ifdef LINUX
+#include <time.h>
+#define GetTickCount() time(NULL)
+#endif
+
 // Prints a text drawing of the maze
 void Dungeon::printMaze()
 {
@@ -46,10 +51,10 @@ void Dungeon::printMaze()
                 switch (x)
                 {
                 case 0:
-                    printf("·%c", NS[n]);
+                    printf("Â·%c", NS[n]);
                     if (row >= 31)
                     {
-                        printf("·");
+                        printf("Â·");
                     }
                     break;
                 case 1:
@@ -66,10 +71,10 @@ void Dungeon::printMaze()
                 case 2:
                     if (idx >= 992)
                     {
-                        printf("·%c", NS[s]);
+                        printf("Â·%c", NS[s]);
                         if (row >= 31)
                         {
-                            printf("·");
+                            printf("Â·");
                         }
                     }
                 }
@@ -80,6 +85,7 @@ void Dungeon::printMaze()
             }
         }
     }
+    printf("\n");
 }
 
 // Constructor
@@ -116,9 +122,9 @@ Dungeon::Dungeon() : VFTPTR(0)
     //if new random map game.
 
     // Scaffolding Inits
-    NS[3] = '—';
+    NS[3] = '-';
     NS[2] = '=';
-    NS[1] = '—';
+    NS[1] = '-';
     NS[0] = ' ';
     EW[3] = '|';
     EW[2] = ')';
