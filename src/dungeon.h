@@ -19,6 +19,7 @@ is held by Douglas J. Morgan.
 #define DOD_DUNGEON_HEADER
 
 #include "dod.h"
+#include "rng.h"
 
 extern RNG rng; // Inculded here for inlines below
 

@@ -8,6 +8,8 @@ is held by Douglas J. Morgan.
 (c) 1982, DynaMicro
 *****************************************/
 
+#include "rng.h"
+
 // Dungeons of Daggorath
 // PC-Port
 // Filename: rng.cpp

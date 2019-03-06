@@ -4,8 +4,8 @@ CCFLAGS = -c -DLINUX
 
 all: dod
 
-dod: creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o sched.o viewer.o
-	$(CC) $(CCLINK) -o dod creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o sched.o viewer.o
+dod: creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o rng.o sched.o viewer.o
+	$(CC) $(CCLINK) -o dod creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o rng.o sched.o viewer.o
 
 creature.o: creature.cpp creature.h
 	$(CC) $(CCFLAGS) creature.cpp
@@ -33,6 +33,9 @@ parser.o: parser.cpp parser.h
 
 player.o: player.cpp player.h
 	$(CC) $(CCFLAGS) player.cpp
+
+rng.o: rng.cpp rng.h
+	$(CC) $(CCFLAGS) rng.cpp
 
 sched.o: sched.cpp sched.h
 	$(CC) $(CCFLAGS) sched.cpp
