@@ -29,7 +29,6 @@ using namespace std;
 #include "object.h"
 #include "creature.h"
 #include "enhanced.h"
-#include <GL/glu.h> // for gluOrtho2D
 
 extern Creature     creature;
 extern Object       object;
@@ -75,14 +74,14 @@ void OS_Link::init()
 
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0)
     {
-        fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
-        quitSDL(1);
+        fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
+        quitSDL(EXIT_FAILURE);
     }
 
     if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
     {
-        fprintf(stderr, "Unable to open audio!\n");
-        quitSDL(1);
+        fprintf(stderr, "Mix_OpenAudio: %s\n", Mix_GetError());
+        quitSDL(EXIT_FAILURE);
     }
 
     creature.LoadSounds();
@@ -203,7 +202,7 @@ void OS_Link::process_events()
             handle_key_down(&event.key.keysym);
             break;
         case SDL_QUIT:
-            quitSDL(0);
+            quitSDL(EXIT_SUCCESS);
             break;
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -330,7 +329,7 @@ bool OS_Link::main_menu()
                 viewer.drawMenu(mainMenu, col, row);
                 break;
             case SDL_QUIT:
-                quitSDL(0);
+                quitSDL(EXIT_SUCCESS);
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -390,7 +389,7 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
 
         case FILE_MENU_EXIT:
             //Exit
-            quitSDL(0);
+            quitSDL(EXIT_SUCCESS);
         }
 
     // Configuration Menu
@@ -638,7 +637,7 @@ bool OS_Link::menu_return(int menu_id, int item, menu Menu)
                         return false;
                         break;
                     case SDL_QUIT:
-                        quitSDL(0);  // Quits SDL
+                        quitSDL(EXIT_SUCCESS);
                         break;
                     case SDL_WINDOWEVENT:
                         if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -701,7 +700,7 @@ int OS_Link::menu_list(int x, int y, const char *title, const char *list[], int 
                 }
                 break;
             case SDL_QUIT:
-                quitSDL(0);
+                quitSDL(EXIT_SUCCESS);
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -770,7 +769,7 @@ int OS_Link::menu_scrollbar(const char *title, int min, int max, int current)
                 viewer.drawMenuScrollbar(title, (current - newMin) / increment);
                 break;
             case SDL_QUIT:
-                quitSDL(0);
+                quitSDL(EXIT_SUCCESS);
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -854,7 +853,7 @@ void OS_Link::menu_string(char *newString, const char *title, size_t maxLength)
                 }
                 break;
             case SDL_QUIT:
-                quitSDL(0);
+                quitSDL(EXIT_SUCCESS);
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -1131,14 +1130,22 @@ void OS_Link::createWindow(int width, int height)
     if (!window)
     {
         fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     windowed_width  = width;
     windowed_height = height;
 
     if (!oglctx)
+    {
         oglctx = SDL_GL_CreateContext(window);
+        if (!oglctx)
+        {
+            fprintf(stderr, "SDL_GL_CreateContext failed: %s\n", SDL_GetError());
+            exit(EXIT_FAILURE);
+        }
+        printf("OpenGL: %s\n", glGetString(GL_VERSION));
+    }
 
     viewer.setup_opengl();
 }
@@ -1187,7 +1194,7 @@ void OS_Link::changeVideoRes(int newWidth, int newHeight)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(0, width, 0, height);
+    glOrtho(0, width, 0, height, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

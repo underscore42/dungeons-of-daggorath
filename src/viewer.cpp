@@ -24,8 +24,6 @@ is held by Douglas J. Morgan.
 #include "creature.h"
 #include "enhanced.h"
 
-#include <GL/glu.h> // for gluOrtho2D
-
 extern Creature     creature;
 extern Dungeon      dungeon;
 extern Object       object;
@@ -354,7 +352,7 @@ void Viewer::setup_opengl()
     glViewport(0, 0, oslink.width, oslink.height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(0, oslink.width, 0, oslink.height);
+    glOrtho(0, oslink.width, 0, oslink.height, -1, 1);
     ClearColor = 1;
 }
 

@@ -1,5 +1,5 @@
 CC      = @g++ -Wall -O2
-CCLINK  = -lGL -lGLU -lSDL2 -lSDL2_mixer
+CCLINK  = -lGL -lSDL2 -lSDL2_mixer
 CCFLAGS = -c -DLINUX
 
 all: dod
