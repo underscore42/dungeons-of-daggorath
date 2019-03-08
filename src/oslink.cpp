@@ -42,7 +42,6 @@ extern Parser       parser;
 
 // Constructor
 OS_Link::OS_Link() : window(0), width(0), height(0),
-    gamefileLen(50), keyLen(256),
     audio_rate(44100), audio_format(AUDIO_S16),
     audio_channels(2), audio_buffers(512),
     oglctx(0)
@@ -1060,6 +1059,33 @@ void OS_Link::loadDefaults(void)
 
     g_options &= ~(OPT_VECTOR | OPT_HIRES);
     g_options |= OPT_STEREO;
+}
+
+// builds up the filename of the savegame to load/save
+void OS_Link::buildSaveGamePath()
+{
+    memset(parser.TOKEN, -1, 33);
+    memset(gamefile, 0, gamefileLen);
+
+    const size_t savedDirLen = strlen(savedDir);
+    memcpy(gamefile, savedDir, savedDirLen);
+    memcpy(gamefile + savedDirLen, pathSep, pathSepLen);
+
+    const size_t preLen = savedDirLen + pathSepLen - 1;
+    if (parser.GETTOK())
+    {
+        size_t tctr = 0;
+        while (parser.TOKEN[tctr] != 0xFF)
+        {
+            gamefile[preLen + tctr] = parser.TOKEN[tctr] + 'A' - 1;
+            ++tctr;
+        }
+        memcpy(gamefile + preLen + tctr, ".dod", 4);
+    }
+    else
+    {
+        memcpy(gamefile + preLen, "game.dod", 8);
+    }
 }
 
 /******************************************************************************

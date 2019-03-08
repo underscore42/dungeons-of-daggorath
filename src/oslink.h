@@ -29,6 +29,7 @@ is held by Douglas J. Morgan.
 #endif
 
 #include "dod.h"
+#include "parser.h"
 
 // Arbitrary Length of 80, maybe be changed if needed
 #define MAX_FILENAME_LENGTH 80
@@ -44,6 +45,7 @@ public:
     void process_events();  // used mainly to retrieve keystrokes
     bool main_menu();       // used to implement the meta-menu
     bool saveOptFile(void);
+    void buildSaveGamePath();
 
     // Public Data Fields
     SDL_Window* window;
@@ -53,15 +55,17 @@ public:
     int     windowed_height; // height when we were last in windowed mode
     int     volumeLevel; // Volume level
 
-    char    gamefile[50];
-    int     gamefileLen;
+    static constexpr size_t pathSepLen = 2;
+    static constexpr size_t gamefileLen = MAX_FILENAME_LENGTH + pathSepLen + Parser::MAX_TOKENLEN + 5; //  + 5 because we need to append ".dod\0"
+    static constexpr size_t keyLen = 256;
+
+    char    gamefile[gamefileLen]; // current savefile that we're loading or saving
     char    pathSep[2];
-    FILE *  fptr;
+
     char    confDir[5];
     char    soundDir[6];
     char    savedDir[MAX_FILENAME_LENGTH + 1];
-    dodBYTE keys[256];
-    int     keyLen;
+    dodBYTE keys[keyLen];
 
     int     audio_rate;
     Uint16  audio_format;

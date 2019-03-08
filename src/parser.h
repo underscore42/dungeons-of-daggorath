@@ -37,6 +37,8 @@ public:
     int     PARHND();
     void    Reset();
 
+    static const size_t MAX_TOKENLEN = 33;
+
     // Public Data Member
     dodSHORT    LINPTR;
     dodBYTE     PARFLG;
@@ -49,7 +51,7 @@ public:
     dodBYTE     KBDBUF[33];
     dodBYTE     LINBUF[33];
     dodSHORT    LINEND;
-    dodBYTE     TOKEN[33];
+    dodBYTE     TOKEN[MAX_TOKENLEN];
     dodBYTE     TOKEND;
     dodBYTE     STRING[35];
     dodBYTE     SWCHAR[11];

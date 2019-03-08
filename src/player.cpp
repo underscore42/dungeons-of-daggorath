@@ -1871,71 +1871,22 @@ void Player::PUSE()
 }
 
 // Processes ZLOAD command
+// actual load happens in Scheduler::LOAD()
 void Player::PZLOAD()
 {
-    int tctr = 0;
-    int preLen;
-    memset(parser.TOKEN, -1, 33);
-    memset(oslink.gamefile, 0, oslink.gamefileLen);
-    strcpy(oslink.gamefile, oslink.savedDir);
-    strcat(oslink.gamefile, oslink.pathSep);
-    preLen = strlen(oslink.gamefile);
-    if (parser.GETTOK())
-    {
-        strcpy(oslink.gamefile, oslink.savedDir);
-        strcat(oslink.gamefile, oslink.pathSep);
-        tctr = 0;
-        while (parser.TOKEN[tctr] != 0xFF)
-        {
-            oslink.gamefile[tctr + preLen] = parser.TOKEN[tctr] + 'A' - 1;
-            ++tctr;
-        }
-        strcat(oslink.gamefile, ".dod");
-    }
-    else
-    {
-        strcat(oslink.gamefile, "game.dod");
-    }
+    oslink.buildSaveGamePath();
 
-    if ((oslink.fptr = fopen(oslink.gamefile, "r")) == NULL)
-    {
-        parser.CMDERR();
-        return;
-    }
-    else
-    {
-        fclose(oslink.fptr);
-        --scheduler.ZFLAG;
-        return;
-    }
+    // this sets the flag to 255 to signal that we should load
+    --scheduler.ZFLAG;
 }
 
 // Processes ZSAVE command
 void Player::PZSAVE()
 {
-    int tctr = 0;
-    int preLen;
-    memset(parser.TOKEN, -1, 33);
-    memset(oslink.gamefile, 0, oslink.gamefileLen);
-    strcpy(oslink.gamefile, oslink.savedDir);
-    strcat(oslink.gamefile, oslink.pathSep);
-    preLen = strlen(oslink.gamefile);
-    if (parser.GETTOK())
-    {
-        while (parser.TOKEN[tctr] != 0xFF)
-        {
-            oslink.gamefile[tctr + preLen] = parser.TOKEN[tctr] + 'A' - 1;
-            ++tctr;
-        }
-        strcat(oslink.gamefile, ".dod");
-    }
-    else
-    {
-        strcat(oslink.gamefile, "game.dod");
-    }
+    oslink.buildSaveGamePath();
 
+    // this sets the flag to 1 to signal that we should save
     ++scheduler.ZFLAG;
-    return;
 }
 
 // Attempts to move player in given direction
