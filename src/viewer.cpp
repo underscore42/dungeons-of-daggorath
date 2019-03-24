@@ -26,6 +26,7 @@ is held by Douglas J. Morgan.
 
 extern Creature     creature;
 extern Dungeon      dungeon;
+extern dodGame      game;
 extern Object       object;
 extern Parser       parser;
 extern Coordinate   crd;

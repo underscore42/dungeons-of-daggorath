@@ -208,7 +208,7 @@ void dodGame::Restart()
 void dodGame::LoadGame()
 {
     scheduler.LOAD();
-    viewer.setVidInv((game.LEVEL % 2) ? true : false);
+    viewer.setVidInv((LEVEL % 2) ? true : false);
     --viewer.UPDATE;
     viewer.draw_game();
     INIVU();
@@ -240,7 +240,7 @@ void dodGame::WAIT()
         if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
         {
             scheduler.CLOCK();
-            if (game.AUTFLG && game.demoRestart == false)
+            if (AUTFLG && demoRestart == false)
             {
                 return;
             }
