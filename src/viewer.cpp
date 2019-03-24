@@ -480,7 +480,7 @@ bool Viewer::ShowFade(int fadeMode)
     for (VCTFAD = 32; (VCTFAD & 128) == 0; VCTFAD -= 2)
     {
         // Set volume of buzz
-        Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+        Mix_Volume(fadChannel, oslink.volumeLevel * (32 - VCTFAD) / 32);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glMatrixMode(GL_MODELVIEW);
@@ -591,7 +591,7 @@ bool Viewer::ShowFade(int fadeMode)
         for (VCTFAD = 0; VCTFAD <= 32; VCTFAD += 2)
         {
             // Set volume of buzz
-            Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+            Mix_Volume(fadChannel, oslink.volumeLevel * (32 - VCTFAD) / 32);
 
             glClear(GL_COLOR_BUFFER_BIT);
             glMatrixMode(GL_MODELVIEW);
@@ -664,7 +664,7 @@ bool Viewer::draw_fade()
     if ((!done && delay1 > delay + buzzStep) && fadeVal != 0)
     {
         // Set volume of buzz
-        Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+        Mix_Volume(fadChannel, oslink.volumeLevel * (32 - VCTFAD) / 32);
 
         glLoadIdentity();
         drawVectorList(W1_VLA);
@@ -741,7 +741,7 @@ void Viewer::enough_fade()
     if ((!done && delay1 > delay + buzzStep) && fadeVal != 0)
     {
         // Set volume of buzz
-        Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+        Mix_Volume(fadChannel, oslink.volumeLevel * (32 - VCTFAD) / 32);
 
         glLoadIdentity();
         drawVectorList(W1_VLA);
@@ -811,7 +811,7 @@ void Viewer::death_fade(const int* WIZ)
     if ((delay1 > delay + buzzStep) && fadeVal != 0)
     {
         // Set volume of buzz
-        Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+        Mix_Volume(fadChannel, oslink.volumeLevel * (32 - VCTFAD) / 32);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glMatrixMode(GL_MODELVIEW);
