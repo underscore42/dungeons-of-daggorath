@@ -30,76 +30,177 @@ extern dodGame  game;
 class Viewer
 {
 public:
-    // Constructor
+
     Viewer();
 
-    // Public Interface
-    void        setup_opengl();
-    void        draw_game();
-    bool        draw_fade();
-    void        enough_fade();
-    void        death_fade(int WIZ[]);
-    void        displayCopyright();
-    void        displayWelcomeMessage();
-    void        displayDeath();
-    void        displayWinner();
-    void        displayEnough();
-    void        displayPrepare();
-    void        drawArea(TXB * a);
-    void        clearArea(TXB * a);
-    void        drawTorchHighlite();
-    void        WIZIN0();
-    int         LUKNEW();
-    void        PUPDAT();
-    void        PUPSUB();
-    void        STATUS();
-    void        PROMPT();
-    void        EXAMIN();
-    void        PCRLF();
-    void        PRTOBJ(int X, bool highlite);
-    void        OUTSTI(dodBYTE * comp);
-    void        OUTSTR(dodBYTE * str);
-    void        OUTCHR(dodBYTE c);
-    void        TXTXXX(dodBYTE c);
-    void        TXTSCR();
-    void        VIEWER();
-    void        SETSCL();
-    void        DRAWIT(int * vl);
-    void        PDRAW(int * vl, dodBYTE dir, dodBYTE pdir);
-    void        CMRDRW(int * vl, int creNum);
-    void        SETFAD();
-    dodSHORT    ScaleX(int x);
-    dodSHORT    ScaleY(int y);
-    float       ScaleXf(float x);
-    float       ScaleYf(float y);
-    void        MAPPER();
-    void        setVidInv(bool inv);
-    void        drawVectorList(int VLA[]);
-    void        drawVector(float X0, float Y0, float X1, float Y1);
-    void        Reset();
-    bool        ShowFade(int fadeMode);
-    void        drawMenu(menu, int, int);
-    void        drawMenuList(int, int, const char *, const char *[], int, int);
-    void        drawMenuScrollbar(const char *, int);
-    void        drawMenuStringTitle(const char *);
-    void        drawMenuString(const char *);
-    void        aboutBox(void);
+    void Reset();
+
+    void setup_opengl();
+
+    // This is the main renderer routine. It draws either the map, or the
+    // 3D/Examine-Status-Text Area.
+    void draw_game();
+
+    // This is the renderer method used to do the wizard fade in/out. It's only
+    // used during the opening. It is syncronized with the 30Hz buzz and the
+    // wizard crashing sound.
+    bool draw_fade();
+
+    // Same as above, but used for the intermission
+    void enough_fade();
+
+    // Same as above, but used for death & victory
+    void death_fade(const int* WIZ);
+
+    // Display various messages
+    void displayCopyright();
+    void displayWelcomeMessage();
+    void displayDeath();
+    void displayWinner();
+    void displayEnough();
+    void displayPrepare();
+
+    // Draws a text block
+    void drawArea(const TXB * a) const;
+
+    // Fills a text block with spaces
+    void clearArea(TXB * a) const;
+
+    // A torch that is in use will show up highlighted in the EXAMINE screen.
+    void drawTorchHighlite() const;
+
+    // This method updates the screen if necessary. Called from the scheduler
+    // every 3 tenths of a second.
+    int LUKNEW();
+
+    // Updates the screen.
+    void PUPDAT();
+
+    // Sets lighting values.
+    void PUPSUB();
+
+    // Updates the Left and Right hand in the status line
+    void STATUS();
+
+    // Show prompt (a dot and an underscore)
+    void PROMPT();
+
+    // Fills TXTEXA with the text for the EXAMINE screen.
+    void EXAMIN();
+
+    // Put a newline in current text block
+    void PCRLF();
+
+    // Prints the object at index X to the current text block
+    void PRTOBJ(int X, bool highlite);
+
+    // Print compressed string to primary or current text block
+    void OUTSTI(const dodBYTE * comp);
+
+    // Print string to primary or current text block
+    void OUTSTR(const dodBYTE * str);
+
+    // Outputs character to primary or current text block
+    void OUTCHR(dodBYTE c);
+
+    // Put a character in current text block
+    void TXTXXX(dodBYTE c);
+
+    // Scrolls the text area up by one line
+    void TXTSCR();
+
+    // This is the 3D-Viewport rendering routine
+    void VIEWER();
+
+    // Sets the perspective scale
+    void SETSCL();
+
+    // Used by 3D-Viewer, draws a vector list
+    void DRAWIT(const int * vl);
+
+    // Used by 3D-Viewer, checks for around-the-corner creature
+    void PDRAW(const int * vl, dodBYTE dir, dodBYTE pdir);
+
+    // Prepares for drawing creature with either magical or physical lighting
+    void CMRDRW(const int * vl, int creNum);
+
+    // Calculates fade (line-pixelation) based on lighting
+    void SETFAD();
+
+    // Scales X-coordinate
+    dodSHORT ScaleX(int x) const { return ((x - VCNTRX) * VXSCAL) / 127; }
+    float ScaleXf(float x) const { return ((x - (float)VCNTRX) * VXSCALf) / 127.0f; }
+
+    // Scales Y-coordinate
+    dodSHORT ScaleY(int y) const { return ((y - VCNTRY) * VYSCAL) / 127; }
+    float ScaleYf(float y) const { return ((y - VCNTRY) * VYSCALf) / 127.0f; }
+
+    // Draws the map; showSeerMap bool determines VISION or SEER mode
+    void MAPPER();
+
+    void setVidInv(bool inv);
+
+    // Draws non-font vector lists
+    void drawVectorList(const int* VLA) const;
+
+    // Draws a line
+    void drawVector(float X0, float Y0, float X1, float Y1) const;
+
+    // This method renders the wizard fade in/out animations.
+    // The parameter fadeMode indicates which of the four fades
+    // to do:
+    //   1 = Beginning before game starts
+    //   2 = Intermission after killing wizards image
+    //   3 = Death
+    //   4 = Victory
+    bool ShowFade(int fadeMode);
+
+    // Draws the menu
+    // mainMenu  - menu instance to draw
+    // menu_id   - the menu number to draw
+    // highlight - the menu item to highlight
+    void drawMenu(const menu& mainMenu, int menu_id, int highlight) const;
+
+    // Draws a menu list
+    // x         - the top-left x-coordinate
+    // y         - the top-left y-coordinate
+    // title     - the title of the list
+    // list      - the list to be drawn
+    // listSize  - the size of the list
+    // highlight - the item that's highlighted
+    void drawMenuList(int x, int y, const char *title, const char *list[], int listSize, int highlight) const;
+
+    // Draws a menu scroll bar
+    // title   - the title of the scrollbar
+    // current - the current percentage
+    void drawMenuScrollbar(const char *title , int current) const;
+
+    // Vars:   title - the title of the string box
+    // Draws a menu string box
+    void drawMenuStringTitle(const char *) const;
+
+    // Draws a menu string box
+    // Vars:   title - the title of the string box
+    void drawMenuString(const char *title) const;
+
+    // Draws the "About" Box
+    void aboutBox() const;
 
 public:
-    // Public Data Fields
+
     dodBYTE     VCTFAD;
     dodBYTE     RANGE;
     bool        showSeerMap;
     Uint32      delay, delay1, delay2;
-    bool        done;
-    int         fadeVal;
+    bool        done;           // if we're done fading
+    int         fadeVal;        // how much we fade with each iteration
     dodBYTE     UPDATE;
-    dodSHORT    display_mode; // 0 = map, 1 = 3D, 2 = Examine, 3 = Prepare
-    int         fadChannel;
+    dodSHORT    display_mode;   // 0 = map, 1 = 3D, 2 = Examine, 3 = Prepare
 
-    int         buzzStep;
-    int         midPause;
-    int         prepPause;
+    static constexpr int fadChannel = 3;    // channel for fade sound effect
+    static constexpr int buzzStep  = 300;
+    static constexpr int midPause  = 2500;
+    static constexpr int prepPause = 2500;
 
     dodBYTE     Scale[21];
     float       Scalef[21];
@@ -111,9 +212,9 @@ public:
     char        examArea[(32 * 19) + 1];
     char        statArea[(32 * 1) + 1];
 
-    TXB         TXTPRI;
-    TXB         TXTEXA;
-    TXB         TXTSTS;
+    TXB         TXTPRI;     // Primary TXB where user can input text
+    TXB         TXTEXA;     // TXB for the EXAMINE screen
+    TXB         TXTSTS;     // TXB for the status line
 
     GLfloat     bgColor[3];
     GLfloat     fgColor[3];
@@ -165,13 +266,22 @@ public:
     };
 
 private:
-    // Internal Implementation
-    void drawVectorListAQ(int VLA[]);
-    void drawCharacter(char c);
-    void drawString(int x, int y, const char * str, int len);
-    void drawString_internal(int x, int y, dodBYTE * str, int len);
-    void plotPoint(double X, double Y);
-    char dod_to_ascii(dodBYTE c);
+
+    // Draws font vectors
+    void drawVectorListAQ(const int* VLA) const;
+
+    // Draws a character
+    void drawCharacter(char c) const;
+
+    // Draws a string
+    void drawString(int x, int y, const char * str, int len) const;
+
+    void drawString_internal(int x, int y, const dodBYTE * str, int len) const;
+
+    // Draws one pixel
+    void plotPoint(double X, double Y) const;
+
+    char dod_to_ascii(dodBYTE c) const;
 
     // Data Fields
     dodSHORT    VCNTRX;
@@ -247,11 +357,9 @@ public:
     int K2_VLA[149];
     int W0_VLA[133];
 
-public:
     int W1_VLA[199];
     int W2_VLA[185];
 
-//private:
     int LAD_VLA[56];
     int HUP_VLA[29];
     int HDN_VLA[19];

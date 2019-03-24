@@ -28,8 +28,8 @@ public:
     // Public Interface
     void    KBDPUT(dodBYTE c);
     dodBYTE KBDGET();
-    void    EXPAND(dodBYTE * X, int * Xup, dodBYTE * U);
-    dodBYTE GETFIV(dodBYTE * X, int * Xup, dodBYTE * zeroY);
+    void    EXPAND(const dodBYTE * X, int * Xup, dodBYTE * U);
+    dodBYTE GETFIV(const dodBYTE * X, int * Xup, dodBYTE * zeroY);
     void    ASRD(dodBYTE & A, dodBYTE & B, int num);
     bool    GETTOK();
     int     PARSER(dodBYTE * X, dodBYTE &A, dodBYTE &B, bool norm);

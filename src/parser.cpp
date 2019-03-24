@@ -258,7 +258,7 @@ GTOK30:
     }
 }
 
-void Parser::EXPAND(dodBYTE * X, int * Xup, dodBYTE * U)
+void Parser::EXPAND(const dodBYTE * X, int * Xup, dodBYTE * U)
 {
     dodBYTE * Y;
     dodBYTE A, B;
@@ -300,7 +300,7 @@ EXPAN10:
     }
 }
 
-dodBYTE Parser::GETFIV(dodBYTE * X, int * Xup, dodBYTE * zeroY)
+dodBYTE Parser::GETFIV(const dodBYTE * X, int * Xup, dodBYTE * zeroY)
 {
     dodBYTE     A, B;
 

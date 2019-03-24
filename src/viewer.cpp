@@ -33,11 +33,9 @@ extern OS_Link      oslink;
 extern Player       player;
 extern Scheduler    scheduler;
 
-int ClearColor = 0;
 
 // Constructor
-Viewer::Viewer() : fadChannel(3), buzzStep(300), midPause(2500),
-    prepPause(2500), VCNTRX(128), VCNTRY(76)
+Viewer::Viewer() : VCNTRX(128), VCNTRY(76)
 {
     Utils::LoadFromDecDigit(A_VLA, "411212717516167572757582823535424");
     Utils::LoadFromDecDigit(B_VLA, "6112128182151522224545525275758285262645455656757");
@@ -344,7 +342,6 @@ void Viewer::Reset()
     clearArea(&TXTSTS);
 }
 
-// Public Interface
 void Viewer::setup_opengl()
 {
     glDisable(GL_LINE_SMOOTH);
@@ -353,7 +350,6 @@ void Viewer::setup_opengl()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, oslink.width, 0, oslink.height, -1, 1);
-    ClearColor = 1;
 }
 
 void Viewer::setVidInv(bool inv)
@@ -380,20 +376,15 @@ void Viewer::setVidInv(bool inv)
         fgColor[1] = 0.0;
         fgColor[2] = 0.0;
     }
-    if ( ClearColor == 1 )
-    {
-        glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
-    }
+
+    glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
 }
 
-// This is the main renderer routine.  It draws either
-// the map, or the 3D/Examine-Status-Text Area.
 void Viewer::draw_game()
 {
     if (UPDATE == 0)
-    {
         return;
-    }
+
     if (display_mode == MODE_MAP)
     {
         // Draw Map
@@ -443,18 +434,11 @@ void Viewer::draw_game()
     UPDATE = 0;
 }
 
-// This method renders the wizard fade in/out animations.
-// The parameter fadeMode indicates which of the four fades
-// to do:
-//   1 = Beginning before game starts
-//   2 = Intermission after killing wizards image
-//   3 = Death
-//   4 = Victory
 bool Viewer::ShowFade(int fadeMode)
 {
     Uint32 ticks1, ticks2;
     SDL_Event event;
-    int * wiz;
+    const int * wiz;
     VXSCAL = 0x80;
     VYSCAL = 0x80;
 
@@ -594,8 +578,8 @@ bool Viewer::ShowFade(int fadeMode)
             {
                 Mix_HaltChannel(fadChannel);
                 clearArea(&TXTPRI);
-                while(SDL_PollEvent(&event)) ; // clear event buffer
-                return false;
+                       while(SDL_PollEvent(&event)) ; // clear event buffer
+                       return false;
             }
         }
 
@@ -661,10 +645,6 @@ bool Viewer::ShowFade(int fadeMode)
     }
 }
 
-// This is the renderer method used to do the wizard
-// fade in/out.  It's only used during the opening.  It
-// is syncronized with the 30Hz buzz and the wizard
-// crashing sound.
 bool Viewer::draw_fade()
 {
     delay1 = delay2 = SDL_GetTicks();
@@ -742,7 +722,6 @@ bool Viewer::draw_fade()
     return done;
 }
 
-// Same as above, but used for the intermission
 void Viewer::enough_fade()
 {
     delay1 = delay2 = SDL_GetTicks();
@@ -824,8 +803,7 @@ void Viewer::enough_fade()
     }
 }
 
-// Same as above, but used for death & victory
-void Viewer::death_fade(int WIZ[])
+void Viewer::death_fade(const int* WIZ)
 {
     delay1 = SDL_GetTicks();
 
@@ -914,7 +892,7 @@ void Viewer::displayPrepare()
     TXBFLG = 0;
 }
 
-void Viewer::drawTorchHighlite()
+void Viewer::drawTorchHighlite() const
 {
     int x1, y1, x2, y2;
     x1 = tcaret - ((tcaret / 32) * 32);
@@ -934,10 +912,8 @@ void Viewer::drawTorchHighlite()
     drawString_internal(x1, y1, parser.TOKEN, tlen);
 }
 
-void Viewer::drawArea(TXB * a)
+void Viewer::drawArea(const TXB * a) const
 {
-    int cnt = 0;
-
     if (a->top == 19)
     {
         glLoadIdentity();
@@ -963,14 +939,11 @@ void Viewer::drawArea(TXB * a)
         glColor3fv(fgColor);
     }
 
-    while (cnt < a->len)
-    {
+    for (int cnt = 0; cnt < a->len; cnt += 32)
         drawString(0, a->top + cnt / 32, a->area + cnt, 32);
-        cnt += 32;
-    }
 }
 
-void Viewer::clearArea(TXB * a)
+void Viewer::clearArea(TXB * a) const
 {
     strcpy(a->area, "                                ");
     int cnt = 32;
@@ -982,8 +955,6 @@ void Viewer::clearArea(TXB * a)
     a->caret = 0;
 }
 
-// This method checks if the screen needs updated.
-// Called from the scheduler every 3 tenths of a second.
 int Viewer::LUKNEW()
 {
     // Update Task's next_time
@@ -1000,7 +971,6 @@ int Viewer::LUKNEW()
     return 0;
 }
 
-// Updates the screen.
 void Viewer::PUPDAT()
 {
     if (player.FAINT != 0)
@@ -1014,12 +984,10 @@ void Viewer::PUPDAT()
     draw_game();
 }
 
-// Sets lighting values.
 void Viewer::PUPSUB()
 {
-    dodBYTE A, B;
-    A = player.PRLITE;
-    B = player.PMLITE;
+    dodBYTE A = player.PRLITE;
+    dodBYTE B = player.PMLITE;
 
     if (player.PTORCH != -1)
     {
@@ -1030,10 +998,9 @@ void Viewer::PUPSUB()
     MLIGHT = B;
 }
 
-// Updates the Left and Right hand in the status line
 void Viewer::STATUS()
 {
-    int ctr, len, offset, idx;
+    int ctr, idx;
     for (ctr = 0; ctr < 15; ++ctr)
     {
         statArea[ctr] = ' ';
@@ -1063,9 +1030,9 @@ void Viewer::STATUS()
         ++ctr;
     }
 
-    len = ctr;
+    const int len = ctr;
     ctr = 32 - len;
-    offset = ctr;
+    const int offset = ctr;
     while (ctr < 32)
     {
         if (parser.TOKEN[ctr - offset] == 0)
@@ -1080,14 +1047,14 @@ void Viewer::STATUS()
     }
 }
 
-void Viewer::OUTSTI(dodBYTE * comp)
+void Viewer::OUTSTI(const dodBYTE * comp)
 {
     int c;
     parser.EXPAND(comp, &c, 0);
     OUTSTR(&parser.STRING[1]);
 }
 
-void Viewer::OUTSTR(dodBYTE * str)
+void Viewer::OUTSTR(const dodBYTE * str)
 {
     int ctr = 0;
     while (*(str + ctr) != 0xFF)
@@ -1177,12 +1144,11 @@ void Viewer::TXTXXX(dodBYTE c)
 
 void Viewer::TXTSCR()
 {
-    int ctr;
-    for (ctr = 0; ctr < TXB_U->len - 32; ++ctr)
+    for (int ctr = 0; ctr < TXB_U->len - 32; ++ctr)
     {
         TXB_U->area[ctr] = TXB_U->area[ctr + 32];
     }
-    for (ctr = TXB_U->len - 32; ctr < TXB_U->len; ++ctr)
+    for (int ctr = TXB_U->len - 32; ctr < TXB_U->len; ++ctr)
     {
         TXB_U->area[ctr] = 0;
     }
@@ -1198,21 +1164,18 @@ void Viewer::PROMPT()
     OUTSTR(parser.M_PROM1);
 }
 
-// This is the 3D-Viewport rendering routine
 void Viewer::VIEWER()
 {
-    dodBYTE a, b, x, u, ftctr, vft;
-    int creNum, objIdx;
-
     RANGE = 0;
     dungeon.DROW.setRC(player.PROW, player.PCOL);
 
     do
     {
         SETSCL();
-        a = dungeon.MAZLND[dungeon.RC2IDX(dungeon.DROW.row, dungeon.DROW.col)];
-        u = 0;
-        x = 4;
+        dodBYTE a = dungeon.MAZLND[dungeon.RC2IDX(dungeon.DROW.row, dungeon.DROW.col)];
+        dodBYTE u = 0;
+        dodBYTE x = 4;
+        dodBYTE b;
         do
         {
             b = a;
@@ -1228,7 +1191,7 @@ void Viewer::VIEWER()
         b = player.PDIR;
         u = b;
 
-        for (ftctr = 0; ftctr < 3; ++ftctr)
+        for (dodBYTE ftctr = 0; ftctr < 3; ++ftctr)
         {
             b = dungeon.NEIBOR[u + FLATAB[ftctr]];
             if (b == dungeon.HF_SDR)
@@ -1240,7 +1203,7 @@ void Viewer::VIEWER()
             DRAWIT(FLATABv[ftctr][b]);
         }
 
-        creNum = creature.CFIND2(dungeon.DROW);
+        const int creNum = creature.CFIND2(dungeon.DROW);
         if (creNum != -1)
         {
             CMRDRW(FWDCRE[creature.CCBLND[creNum].creature_id], creNum);
@@ -1250,7 +1213,7 @@ void Viewer::VIEWER()
         PDRAW(RPK_VLA, 1, u);
 
         // Draw vertical features
-        vft = dungeon.VFIND(dungeon.DROW);
+        const dodBYTE vft = dungeon.VFIND(dungeon.DROW);
         if (vft == Dungeon::VF_NULL)
         {
             DRAWIT(CEI_VLA);
@@ -1284,7 +1247,7 @@ void Viewer::VIEWER()
         object.OFINDF = 0;
         do
         {
-            objIdx = object.OFIND(dungeon.DROW);
+            const int objIdx = object.OFIND(dungeon.DROW);
             if (objIdx == -1)
                 break;
             --MAGFLG;
@@ -1305,7 +1268,6 @@ void Viewer::VIEWER()
     while (RANGE <= 9);
 }
 
-// Calculates fade (line-pixelation) based on lighting
 void Viewer::SETFAD()
 {
     dodBYTE a, b;
@@ -1329,39 +1291,35 @@ void Viewer::SETFAD()
     VCTFAD = b;
 }
 
-// Used by 3D-Viewer, draws a vector list
-void Viewer::DRAWIT(int * vl)
+void Viewer::DRAWIT(const int * vl)
 {
     SETFAD();
     drawVectorList(vl);
 }
 
-// Used by 3D-Viewer, checks for around-the-corner creature
-void Viewer:: PDRAW(int * vl, dodBYTE dir, dodBYTE pdir)
+void Viewer::PDRAW(const int * vl, dodBYTE dir, dodBYTE pdir)
 {
-    RowCol side;
-    dodBYTE DIR;
-    int creNum;
     if (dungeon.NEIBOR[pdir + dir] != 0)
         return;
-    DIR = ((dir + player.PDIR) & 3);
-    side.row = dungeon.DROW.row + dungeon.STPTAB[DIR * 2];
-    side.col = dungeon.DROW.col + dungeon.STPTAB[DIR * 2 + 1];
-    creNum = creature.CFIND2(side);
+
+    const dodBYTE DIR = ((dir + player.PDIR) & 3);
+    const RowCol side(
+        dungeon.DROW.row + dungeon.STPTAB[DIR * 2],
+        dungeon.DROW.col + dungeon.STPTAB[DIR * 2 + 1]
+    );
+    const int creNum = creature.CFIND2(side);
     if (creNum == -1)
         return;
     CMRDRW(vl, creNum);
 }
 
-// Prepares for drawing creature with either magical or physical lighting
-void Viewer::CMRDRW(int * vl, int creNum)
+void Viewer::CMRDRW(const int * vl, int creNum)
 {
     if (creature.CCBLND[creNum].P_CCMGO != 0)
         --MAGFLG;
     DRAWIT(vl);
 }
 
-// Sets the perspective scale
 void Viewer::SETSCL()
 {
     int idx = HLFSCL;
@@ -1427,15 +1385,8 @@ void Viewer::EXAMIN()
     ctr = player.BAGPTR;
     while (ctr != -1)
     {
-        // check for torch
-        if (ctr == player.PTORCH)
-        {
-            PRTOBJ(ctr, true);
-        }
-        else
-        {
-            PRTOBJ(ctr, false);
-        }
+        PRTOBJ(ctr, ctr == player.PTORCH);
+
         ctr = object.OCBLND[ctr].P_OCPTR;
     }
 
@@ -1474,21 +1425,17 @@ void Viewer::PRTOBJ(int X, bool highlite)
     }
 }
 
-// Draws the map; showSeerMap bool determines VISION or SEER mode
 void Viewer::MAPPER()
 {
-    int mazIdx, objIdx, creIdx, vftIdx;
     float DoorOffset;
     RowCol rc;
-    dodBYTE a;
-    bool vftOnce;
 
     dungeon.DROW.row = 31;
     dungeon.DROW.col = 31;
     glColor3f(0.0, 0.0, 0.0);
     do
     {
-        mazIdx = dungeon.RC2IDX(dungeon.DROW.row, dungeon.DROW.col);
+        const int mazIdx = dungeon.RC2IDX(dungeon.DROW.row, dungeon.DROW.col);
         if (dungeon.MAZLND[mazIdx] != 0xFF)
         {
             glBegin(GL_QUADS);
@@ -1500,7 +1447,7 @@ void Viewer::MAPPER()
             if (game.MarkDoorsOnScrollMaps)    //Do we need to mark the doors on the scroll maps?
             {
                 if ((dungeon.MAZLND[mazIdx] & 0x0c) == (0x01 << 2) ||
-                        (dungeon.MAZLND[mazIdx] & 0x0c) == (0x02 << 2))
+                    (dungeon.MAZLND[mazIdx] & 0x0c) == (0x02 << 2))
                 {
                     //Do we have a east door or secret door?
                     DoorOffset = ((dungeon.MAZLND[mazIdx] | 0xcc) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
@@ -1567,7 +1514,7 @@ void Viewer::MAPPER()
                     glColor3f(0.0, 0.0, 0.0);
                 }  //Do we have a east door or secret door?
                 if ((dungeon.MAZLND[mazIdx] & 0x30) == (0x01 << 4) ||
-                        (dungeon.MAZLND[mazIdx] & 0x30) == (0x02 << 4))
+                    (dungeon.MAZLND[mazIdx] & 0x30) == (0x02 << 4))
                 {
                     //Do we have a south door or secret door?
                     DoorOffset = ((dungeon.MAZLND[mazIdx] | 0x33) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
@@ -1652,7 +1599,7 @@ void Viewer::MAPPER()
         object.OFINDF = 0;
         do
         {
-            objIdx = object.FNDOBJ();
+            const int objIdx = object.FNDOBJ();
             if (objIdx == -1)
                 break;
             if (object.OCBLND[objIdx].P_OCOWN != 0)
@@ -1669,7 +1616,7 @@ void Viewer::MAPPER()
         while (true);
 
         // Mark Creatures
-        creIdx = -1;
+        int creIdx = -1;
         do
         {
             ++creIdx;
@@ -1730,11 +1677,11 @@ void Viewer::MAPPER()
     glEnd();
 
     // Mark Vertical Features
-    vftIdx = dungeon.VFTPTR;
-    vftOnce = false;
+    int vftIdx = dungeon.VFTPTR;
+    bool vftOnce = false;
     do
     {
-        a = dungeon.VFTTAB[vftIdx++];
+        const dodBYTE a = dungeon.VFTTAB[vftIdx++];
         if (a == 0xFF)
         {
             if (vftOnce == false)
@@ -1776,25 +1723,20 @@ void Viewer::MAPPER()
     while (true);
 }
 
-// Draws non-font vector lists
-void Viewer::drawVectorList(int VLA[])
+void Viewer::drawVectorList(const int* VLA) const
 {
-    int numLists = VLA[0];
-    int curList = 0;
-    int numVertices;
-    int curVertex;
-    int ctr = 1;
-
     if (VCTFAD == 0xFF)
-    {
         return;
-    }
+
+    const int numLists = VLA[0];
+    int curList = 0;
+    int ctr = 1;
 
     while (curList < numLists)
     {
-        numVertices = VLA[ctr];
+        const int numVertices = VLA[ctr];
         ++ctr;
-        curVertex = 0;
+        int curVertex = 0;
         while (curVertex < (numVertices - 1) )
         {
             if (g_options & (OPT_VECTOR | OPT_HIRES))
@@ -1829,33 +1771,9 @@ void Viewer::drawVectorList(int VLA[])
     }
 }
 
-// Scales X-coordinate
-dodSHORT Viewer::ScaleX(int x)
+void Viewer::drawVectorListAQ(const int* VLA) const
 {
-    return ((x - VCNTRX) * VXSCAL) / 127;
-}
-
-float Viewer::ScaleXf(float x)
-{
-    return ((x - (float)VCNTRX) * VXSCALf) / 127.0f;
-}
-
-float Viewer::ScaleYf(float y)
-{
-    return ((y - VCNTRY) * VYSCALf) / 127.0f;
-}
-
-// Scales Y-coordinate
-dodSHORT Viewer::ScaleY(int y)
-{
-    return ((y - VCNTRY) * VYSCAL) / 127;
-
-}
-
-// Draws font vectors
-void Viewer::drawVectorListAQ(int VLA[])
-{
-    int numQuads = VLA[0];
+    const int numQuads = VLA[0];
     int curQuad = 0;
     int ctr = 1;
 
@@ -1872,8 +1790,7 @@ void Viewer::drawVectorListAQ(int VLA[])
     glEnd();
 }
 
-// Draws a character
-void Viewer::drawCharacter(char c)
+void Viewer::drawCharacter(char c) const
 {
     if (c >= 'A' && c <= 'Z')
     {
@@ -1931,21 +1848,19 @@ void Viewer::drawCharacter(char c)
     }
 }
 
-void Viewer::drawString_internal(int x, int y, dodBYTE * str, int len)
+void Viewer::drawString_internal(int x, int y, const dodBYTE * str, int len) const
 {
-    int ctr;
-    char c;
     glLoadIdentity();
     glTranslatef(crd.newX(x * 8), crd.newY(((y + 1) * 8)), 0.0);
-    for (ctr = 0; ctr < len; ++ctr)
+    for (int ctr = 0; ctr < len; ++ctr)
     {
-        c = dod_to_ascii(*(str + ctr));
+        const char c = dod_to_ascii(*(str + ctr));
         drawCharacter(c);
         glTranslatef(crd.newXa(8), 0.0, 0.0);
     }
 }
 
-char Viewer::dod_to_ascii(dodBYTE c)
+char Viewer::dod_to_ascii(dodBYTE c) const
 {
     if (c >= 1 && c <= 26) return (c | 64);
     if (c == parser.I_SP) return ' ';
@@ -1960,34 +1875,32 @@ char Viewer::dod_to_ascii(dodBYTE c)
     return ' ';
 }
 
-// Draws a string
-void Viewer::drawString(int x, int y, const char * str, int len)
+void Viewer::drawString(int x, int y, const char * str, int len) const
 {
-    int ctr;
     glLoadIdentity();
     glTranslatef(crd.newX(x * 8), crd.newY(((y + 1) * 8)), 0.0);
-    for (ctr = 0; ctr < len; ++ctr)
+    for (int ctr = 0; ctr < len; ++ctr)
     {
         drawCharacter(*(str + ctr));
         glTranslatef(crd.newXa(8), 0.0, 0.0);
     }
 }
 
-// Draws a line
-void Viewer::drawVector(float X0, float Y0, float X1, float Y1)
+void Viewer::drawVector(float X0, float Y0, float X1, float Y1) const
 {
+    if (VCTFAD == 0xff)
+        return; // do not draw lines with VCTFAD=255
+
     if (g_options & OPT_VECTOR) // draw using GL vectors
     {
-        GLfloat     clrLine[3];
-
-        if (VCTFAD == 0xff) return; // do not draw lines with VCTFAD=255
-
         // calculate line color from VCTFAD
-        float flBirghtness = 1.0f / (VCTFAD / 2.0f + 1.0f);
+        const float flBirghtness = 1.0f / (VCTFAD / 2.0f + 1.0f);
         // calculate color between FG and BG
-        clrLine[0] = fgColor[0] * flBirghtness + bgColor[0] * (1.0f - flBirghtness);
-        clrLine[1] = fgColor[1] * flBirghtness + bgColor[1] * (1.0f - flBirghtness);
-        clrLine[2] = fgColor[2] * flBirghtness + bgColor[2] * (1.0f - flBirghtness);
+        GLfloat clrLine[3] = {
+            fgColor[0] * flBirghtness + bgColor[0] * (1.0f - flBirghtness),
+            fgColor[1] * flBirghtness + bgColor[1] * (1.0f - flBirghtness),
+            fgColor[2] * flBirghtness + bgColor[2] * (1.0f - flBirghtness)
+        };
 
         // draw the vector
         glBegin(GL_LINES);
@@ -1999,24 +1912,16 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1)
     }
     else
     {
-        float XL, YL, L;
-        int FADCNT;
-        double DX, DY, XX, YY;
-
-        if (VCTFAD == 0xFF)
-        {
-            return;
-        }
-        FADCNT = VCTFAD + 1;
-        XL = (X1 > X0) ? (X1 - X0) : (X0 - X1);
-        YL = (Y1 > Y0) ? (Y1 - Y0) : (Y0 - Y1);
-        L = (XL > YL) ? XL : YL;
+        int FADCNT = VCTFAD + 1;
+        float XL = (X1 > X0) ? (X1 - X0) : (X0 - X1);
+        float YL = (Y1 > Y0) ? (Y1 - Y0) : (Y0 - Y1);
+        float L = (XL > YL) ? XL : YL;
         if (L == 0)
-        {
             return;
-        }
-        DX = ((double) XL / (double) L) * ((X0 < X1) ? 1 : -1);
-        DY = ((double) YL / (double) L) * ((Y0 < Y1) ? 1 : -1);
+
+        double DX = ((double) XL / (double) L) * ((X0 < X1) ? 1 : -1);
+        double DY = ((double) YL / (double) L) * ((Y0 < Y1) ? 1 : -1);
+
         if (g_options & OPT_HIRES) // prepare to draw a HIRES line
         {
             // in hires mode, all we need to do is increase the # pixels per line.
@@ -2026,8 +1931,8 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1)
             DY /= (double)scale;
             L *= scale;
         }
-        XX = X0 + 0.5;
-        YY = Y0 + 0.5;
+        double XX = X0 + 0.5;
+        double YY = Y0 + 0.5;
         do
         {
             if (--FADCNT == 0)
@@ -2052,43 +1957,29 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1)
     }
 }
 
-// Draws one pixel
-void Viewer::plotPoint(double X, double Y)
+void Viewer::plotPoint(double X, double Y) const
 {
     if (g_options & OPT_HIRES)
     {
         // draw a single pixel
         glBegin(GL_POINTS);
-        float x, y;
-        x = crd.newX(X);
-        y = crd.newY(Y);
-        glVertex2f(x, y);
+        glVertex2f(crd.newX(X), crd.newY(Y));
         glEnd();
     }
     else   // draw a COCO pixel (square)
     {
         glBegin(GL_QUADS);
-        glVertex2f(crd.newX(X), crd.newY(Y));
-        glVertex2f(crd.newX(X + 1),   crd.newY(Y));
-        glVertex2f(crd.newX(X + 1),   crd.newY(Y + 1));
-        glVertex2f(crd.newX(X),     crd.newY(Y + 1));
+        glVertex2f(crd.newX(X    ), crd.newY(Y    ));
+        glVertex2f(crd.newX(X + 1), crd.newY(Y    ));
+        glVertex2f(crd.newX(X + 1), crd.newY(Y + 1));
+        glVertex2f(crd.newX(X    ), crd.newY(Y + 1));
         glEnd();
     }
 }
 
-/****************************************************************
-  Member: drawMenu
-
-  Vars:   menu_id   - the menu number to draw
-          highlight - the menu item to highlight
-
-  Function: Draws the menu
-****************************************************************/
-void Viewer::drawMenu(menu mainMenu, int menu_id, int highlight)
+void Viewer::drawMenu(const menu& mainMenu, int menu_id, int highlight) const
 {
-    int x, y, length;
-
-// Clear screen
+    // Clear screen
     glColor3fv(bgColor);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2102,9 +1993,9 @@ void Viewer::drawMenu(menu mainMenu, int menu_id, int highlight)
 
     for(int i = 0; i < mainMenu.getMenuSize(menu_id); i++)
     {
-        x = menu_id * 5;
-        y = i + 2;
-        length = strlen(mainMenu.getMenuItem(menu_id, i));
+        const int x = menu_id * 5;
+        const int y = i + 2;
+        const int length = strlen(mainMenu.getMenuItem(menu_id, i));
 
         if(i == highlight)
         {
@@ -2127,22 +2018,8 @@ void Viewer::drawMenu(menu mainMenu, int menu_id, int highlight)
     SDL_GL_SwapWindow(oslink.window);
 }
 
-/****************************************************************
-  Member: drawMenuList
-
-  Vars:   x         - the top-left x-coordinate
-          y         - the top-left y-coordinate
-      title     - the title of the list
-      list      - the list to be drawn
-      listSize  - the size of the list
-      highlight - the item that's highlighted
-
-  Function: Draws a menu list
-****************************************************************/
-void Viewer::drawMenuList(int x, int y, const char *title, const char *list[], int listSize, int highlight)
+void Viewer::drawMenuList(int x, int y, const char *title, const char *list[], int listSize, int highlight) const
 {
-    int length;
-
     // Clear screen
     glColor3fv(bgColor);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2154,7 +2031,7 @@ void Viewer::drawMenuList(int x, int y, const char *title, const char *list[], i
     // Draw Menu Items
     for(int i = 0; i < listSize; i++, y++)
     {
-        length = strlen(list[i]);
+        const int length = strlen(list[i]);
 
         if(i == highlight)
         {
@@ -2177,19 +2054,8 @@ void Viewer::drawMenuList(int x, int y, const char *title, const char *list[], i
     SDL_GL_SwapWindow(oslink.window);
 }
 
-
-/****************************************************************
-  Member: drawMenuScrollbar
-
-  Vars:   title   - the title of the scrollbar
-          current - the current percentage
-
-  Function: Draws a menu scroll bar
-****************************************************************/
-void Viewer::drawMenuScrollbar(const char *title, int current)
+void Viewer::drawMenuScrollbar(const char *title, int current) const
 {
-    int x;
-
     // Clear screen
     glColor4fv(bgColor);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2202,30 +2068,17 @@ void Viewer::drawMenuScrollbar(const char *title, int current)
     drawString(0, 6, "MIN", 3);
     drawString(29, 6, "MAX", 3);
 
-    for(x = 0; x < current; x++)
-    {
-        drawString(x, 7, "-", 1);
-    }
-
-    drawString(current, 7, "+", 1);
-
-    for(x = current + 1; x < 32; x++)
-    {
-        drawString(x, 7, "-", 1);
-    }
+    // draw the bar which looks like this: ------+-------------
+    char buf[32];
+    memset(buf, '-', 32);
+    buf[current] = '+';
+    drawString(0, 7, buf, 32);
 
     // Update the screen
     SDL_GL_SwapWindow(oslink.window);
 }
 
-/****************************************************************
-  Member: drawMenuStringTitle
-
-  Vars:   title - the title of the string box
-
-  Function: Draws a menu string box
-****************************************************************/
-void Viewer::drawMenuStringTitle(const char *title)
+void Viewer::drawMenuStringTitle(const char *title) const
 {
     // Clear screen
     glColor4fv(bgColor);
@@ -2238,14 +2091,7 @@ void Viewer::drawMenuStringTitle(const char *title)
     SDL_GL_SwapWindow(oslink.window);
 }
 
-/****************************************************************
-  Member: drawMenuString
-
-  Vars:   title - the title of the string box
-
-  Function: Draws a menu string box
-****************************************************************/
-void Viewer::drawMenuString(const char *currentString)
+void Viewer::drawMenuString(const char *currentString) const
 {
     drawString(0, 2, currentString, strlen(currentString));
     drawString(strlen(currentString), 2, "_", 1);
@@ -2254,12 +2100,7 @@ void Viewer::drawMenuString(const char *currentString)
     SDL_GL_SwapWindow(oslink.window);
 }
 
-/****************************************************************
-  Member: aboutBox
-
-  Function: Draws the "About" Box
-****************************************************************/
-void Viewer::aboutBox(void)
+void Viewer::aboutBox(void) const
 {
     // Clear screen
     glColor4fv(bgColor);
