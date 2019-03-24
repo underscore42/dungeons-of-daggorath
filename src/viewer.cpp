@@ -1885,12 +1885,12 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1) const
     if (g_options & OPT_VECTOR) // draw using GL vectors
     {
         // calculate line color from VCTFAD
-        const float flBirghtness = 1.0f / (VCTFAD / 2.0f + 1.0f);
+        const float flBrightness = 1.0f / (VCTFAD / 2.0f + 1.0f);
         // calculate color between FG and BG
         GLfloat clrLine[3] = {
-            fgColor[0] * flBirghtness + bgColor[0] * (1.0f - flBirghtness),
-            fgColor[1] * flBirghtness + bgColor[1] * (1.0f - flBirghtness),
-            fgColor[2] * flBirghtness + bgColor[2] * (1.0f - flBirghtness)
+            fgColor[0] * flBrightness + bgColor[0] * (1.0f - flBrightness),
+            fgColor[1] * flBrightness + bgColor[1] * (1.0f - flBrightness),
+            fgColor[2] * flBrightness + bgColor[2] * (1.0f - flBrightness)
         };
 
         // draw the vector
