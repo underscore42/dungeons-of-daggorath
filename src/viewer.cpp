@@ -1246,7 +1246,7 @@ void Viewer::VIEWER()
 
         // Draw Objects
         object.OFINDF = 0;
-        do
+        for (;;)
         {
             const int objIdx = object.OFIND(dungeon.DROW);
             if (objIdx == -1)
@@ -1255,8 +1255,6 @@ void Viewer::VIEWER()
             DRAWIT(FWDOBJ[object.OCBLND[objIdx].obj_type]);
             DRAWIT(FWDOBJ[object.OCBLND[objIdx].obj_type]);
         }
-        while (true);
-
 
         if (dungeon.NEIBOR[u] != 0)
         {
@@ -1598,7 +1596,7 @@ void Viewer::MAPPER()
     {
         // Mark Objects
         object.OFINDF = 0;
-        do
+        for (;;)
         {
             const int objIdx = object.FNDOBJ();
             if (objIdx == -1)
@@ -1614,15 +1612,10 @@ void Viewer::MAPPER()
             glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
             glEnd();
         }
-        while (true);
 
         // Mark Creatures
-        int creIdx = -1;
-        do
+        for (int creIdx = 0; creIdx < 32; ++creIdx)
         {
-            ++creIdx;
-            if (creIdx == 32)
-                break;
             if (creature.CCBLND[creIdx].P_CCUSE == 0)
                 continue;
             rc.row = creature.CCBLND[creIdx].P_CCROW;
@@ -1644,7 +1637,6 @@ void Viewer::MAPPER()
             glVertex2f(crd.newX((rc.col * 8) + 4), crd.newY((rc.row * 6) + 1));
             glEnd();
         }
-        while (true);
     }
 
     // Mark Player
@@ -1680,7 +1672,7 @@ void Viewer::MAPPER()
     // Mark Vertical Features
     int vftIdx = dungeon.VFTPTR;
     bool vftOnce = false;
-    do
+    for (;;)
     {
         const dodBYTE a = dungeon.VFTTAB[vftIdx++];
         if (a == 0xFF)
@@ -1719,9 +1711,7 @@ void Viewer::MAPPER()
         glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 5));
         glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
         glEnd();
-
     }
-    while (true);
 }
 
 void Viewer::drawVectorList(const int* VLA) const
