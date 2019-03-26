@@ -59,8 +59,8 @@ typedef unsigned short  dodSHORT;
 class Coordinate
 {
 public:
-    Coordinate() : orgWidth(256.0L), orgHeight(192.0L),
-        curWidth(512.0L), curHeight(384.0L)
+    Coordinate() : orgWidth(256.0), orgHeight(192.0),
+        curWidth(512.0), curHeight(384.0)
     {}
 
     // Sets the data members based on screen width
@@ -227,8 +227,7 @@ class CDB
 public:
     // Constructors
     CDB(dodSHORT pow, dodBYTE mgo, dodBYTE mgd,
-        dodBYTE pho, dodBYTE phd, int tmv,
-        int tat)
+        dodBYTE pho, dodBYTE phd, int tmv, int tat)
         : P_CDPOW(pow), P_CDMGO(mgo), P_CDMGD(mgd),
           P_CDPHO(pho), P_CDPHD(phd), P_CDTMV(tmv),
           P_CDTAT(tat)
@@ -241,13 +240,13 @@ public:
     {}
 
     // Fields
-    dodSHORT    P_CDPOW;
-    dodBYTE     P_CDMGO;
-    dodBYTE     P_CDMGD;
-    dodBYTE     P_CDPHO;
-    dodBYTE     P_CDPHD;
-    int         P_CDTMV;
-    int         P_CDTAT;
+    dodSHORT    P_CDPOW;    // power
+    dodBYTE     P_CDMGO;    // magic offense
+    dodBYTE     P_CDMGD;    // magic defense
+    dodBYTE     P_CDPHO;    // physical offense
+    dodBYTE     P_CDPHD;    // physical defense
+    int         P_CDTMV;    // move speed
+    int         P_CDTAT;    // attack speed
 };
 
 // Object control block
@@ -300,15 +299,12 @@ class ODB
 {
 public:
     // Constructors
-    ODB(dodBYTE cls, dodBYTE rev, dodBYTE mgo,
-        dodBYTE pho)
-        : P_ODCLS(cls), P_ODREV(rev), P_ODMGO(mgo),
-          P_ODPHO(pho)
+    ODB(dodBYTE cls, dodBYTE rev, dodBYTE mgo, dodBYTE pho)
+        : P_ODCLS(cls), P_ODREV(rev), P_ODMGO(mgo), P_ODPHO(pho)
     {}
 
     ODB()
-        : P_ODCLS(0), P_ODREV(0), P_ODMGO(0),
-          P_ODPHO(0)
+        : P_ODCLS(0), P_ODREV(0), P_ODMGO(0), P_ODPHO(0)
     {}
 
     // Fields
@@ -326,15 +322,12 @@ class XDB
 {
 public:
     // Constructors
-    XDB(int idx, dodSHORT x0, dodSHORT x1,
-        dodSHORT x2)
-        : P_OXIDX(idx), P_OXXX0(x0), P_OXXX1(x1),
-          P_OXXX2(x2)
+    XDB(int idx, dodSHORT x0, dodSHORT x1, dodSHORT x2)
+        : P_OXIDX(idx), P_OXXX0(x0), P_OXXX1(x1), P_OXXX2(x2)
     {}
 
     XDB()
-        : P_OXIDX(-1), P_OXXX0(0), P_OXXX1(0),
-          P_OXXX2(0)
+        : P_OXIDX(-1), P_OXXX0(0), P_OXXX1(0), P_OXXX2(0)
     {}
 
     // Fields

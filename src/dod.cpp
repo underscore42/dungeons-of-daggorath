@@ -86,13 +86,3 @@ void printvls()
     printalpha(viewer.SCRO_VLA, 12, "SCRO_VLA");
     printalpha(viewer.FLAS_VLA, 10, "FLAS_VLA");
 }
-
-Mix_Chunk *Utils::LoadSound(const char *snd)
-{
-    char fn[256];
-    sprintf(fn, "%s%s%s", oslink.soundDir, oslink.pathSep, snd);
-    Mix_Chunk* sample = Mix_LoadWAV(fn);
-    if (!sample)
-        printf("Could not load sound '%s'\n", fn);
-    return sample;
-}
