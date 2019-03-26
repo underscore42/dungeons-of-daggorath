@@ -25,19 +25,33 @@ public:
     // Constructor
     Parser();
 
-    // Public Interface
-    void    KBDPUT(dodBYTE c);
-    dodBYTE KBDGET();
-    void    EXPAND(const dodBYTE * X, int * Xup, dodBYTE * U);
-    dodBYTE GETFIV(const dodBYTE * X, int * Xup, dodBYTE * zeroY);
-    void    ASRD(dodBYTE & A, dodBYTE & B, int num);
-    bool    GETTOK();
-    int     PARSER(dodBYTE * X, dodBYTE &A, dodBYTE &B, bool norm);
-    void    CMDERR();
-    int     PARHND();
-    void    Reset();
+    void Reset();
 
-    static const size_t MAX_TOKENLEN = 33;
+    // This method puts a character into the DoD buffer
+    void KBDPUT(dodBYTE c);
+
+    // This method gets a character from the DoD buffer
+    dodBYTE KBDGET();
+
+    // Expands packed string src into dst and stores how far we read from src in
+    // src_offset. If dst is 0 then the string will be expanded into the
+    // internal STRING buffer.
+    void EXPAND(const dodBYTE* src, int* src_offset, dodBYTE* dst);
+
+    // Stores next token from LINBUF in TOKEN, returns true if there was a token
+    bool GETTOK();
+
+    // Gets and classifies the next token
+    // A = TYPE, B = CLASS
+    int PARSER(dodBYTE * X, dodBYTE &A, dodBYTE &B, bool norm);
+
+    // Prints ???
+    void CMDERR() const;
+
+    // Parses LEFT or RIGHT hand
+    int PARHND();
+
+    static constexpr size_t MAX_TOKENLEN = 33;
 
     // Public Data Member
     dodSHORT    LINPTR;
@@ -106,8 +120,6 @@ public:
     dodBYTE M_CURS[3];
     dodBYTE M_ERAS[6];
     dodBYTE CERR[3];
-
-private:
 };
 
 #endif // DOD_PARSER_HEADER

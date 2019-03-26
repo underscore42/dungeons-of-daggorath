@@ -67,16 +67,6 @@ Parser::Parser() : LINPTR(0),
     Utils::LoadFromHex(CERR, "177BD0");
     Utils::LoadFromHex(CMDTAB, "0F30034A046B2806C4B440200927C0380B80B52E28180E5A003012E185D42018F7AC201AFB142021563030245B142C202747DC20295938182B32802834C78480283530D8A0");
     Utils::LoadFromHex(DIRTAB, "0620185350282493A280200411AC300327D5C4102B002008FBB8");
-
-    /*  Utils::LoadFromHex(CERR,"177BD0");
-
-        Utils::LoadFromHex(CMDTAB,
-            "0F30034A046B2806C4B440200927C0380B80B52E28180E5A003012E185D42018F7AC20"
-            "1AFB142021563030245B142C202747DC20295938182B32802834C78480283530D8A0"
-            );
-
-        Utils::LoadFromHex(DIRTAB,
-            "0620185350282493A280200411AC300327D5C4102B002008FBB8");*/
 }
 
 void Parser::Reset()
@@ -108,7 +98,6 @@ void Parser::Reset()
     }
 }
 
-// This method puts a character into the DoD buffer
 void Parser::KBDPUT(dodBYTE c)
 {
     KBDBUF[KBDTAL] = c;
@@ -116,7 +105,6 @@ void Parser::KBDPUT(dodBYTE c)
     KBDTAL &= 31;
 }
 
-// This method gets a character from the DoD buffer
 dodBYTE Parser::KBDGET()
 {
     dodBYTE c = 0;
@@ -128,14 +116,8 @@ dodBYTE Parser::KBDGET()
     return c;
 }
 
-// The rest of these methods are direct ports from the source,
-// including all the GOTOs.  Someday, these should probably be
-// updated to a more C/C++ programming style, but for the moment
-// they work just fine.
-//
 int Parser::PARSER(dodBYTE * pTABLE, dodBYTE & A, dodBYTE & B, bool norm)
 {
-    bool    tok;
     int     U, Xup, Y;
     dodBYTE retA, retB;
 
@@ -143,8 +125,7 @@ int Parser::PARSER(dodBYTE * pTABLE, dodBYTE & A, dodBYTE & B, bool norm)
     {
         A = 0;
         B = 0;
-        tok = GETTOK();
-        if (tok == false)
+        if (!GETTOK())
         {
             return 0;
         }
@@ -258,128 +239,75 @@ GTOK30:
     }
 }
 
-void Parser::EXPAND(const dodBYTE * X, int * Xup, dodBYTE * U)
+void Parser::EXPAND(const dodBYTE* src, int* src_offset, dodBYTE* dst)
 {
-    dodBYTE * Y;
-    dodBYTE A, B;
-    int Xup2;
-
-    *Xup = 0;
-
-    if (U != 0)
+    if (!dst)
     {
-        Y = (U - 1);
+        dst = &STRING[0];
+        ++dst;
     }
-    else
-    {
-        Y = &STRING[0];
-        U = Y + 1;
-    }
-    *Y = 0;
-    B = GETFIV(X, &Xup2, Y);
-    X += Xup2;
-    A = B;
 
-EXPAN10:
-    B = GETFIV(X, &Xup2, Y);
-    X += Xup2;
-    *Xup += Xup2;
-    *U = B;
-    ++U;
-    --A;
-    if (A != 0xFF)
-    {
-        goto EXPAN10;
-    }
-    *U = A;
+    const dodBYTE* const src_beg = src;
 
-    if ( (*Y) != 0)
+    // first 5 bits contain the length of the expanded string minus one
+    const unsigned total_len = (*src >> 3) + 1;
+
+    unsigned offset = 1; // at which 5 bit char are we
+
+    for (unsigned i = 0; i < total_len; ++i)
     {
-        ++X;
-        ++*Xup;
+        // wrap around because the offset pattern repeats after 8 * 5 bit chars
+        offset &= 7;
+
+        switch (offset)
+        {
+            case 0:
+                *dst = *src >> 3;
+                break;
+            case 1:
+                *dst = (*src << 2) & 0x1f;
+                ++src;
+                *dst |= *src >> 6;
+                break;
+            case 2:
+                *dst = (*src >> 1) & 0x1f;
+                break;
+            case 3:
+                *dst = (*src << 4) & 0x1f;
+                ++src;
+                *dst |= *src >> 4;
+                break;
+            case 4:
+                *dst = (*src << 1) & 0x1f;
+                ++src;
+                *dst |= *src >> 7;
+                break;
+            case 5:
+                *dst = (*src >> 2) & 0x1f;
+                break;
+            case 6:
+                *dst = (*src << 3) & 0x1f;
+                ++src;
+                *dst |= *src >> 5;
+                break;
+            case 7:
+                *dst = *src & 0x1f;
+                ++src;
+                break;
+        }
+        ++dst;
+        ++offset;
     }
+
+    *dst = I_NULL;
+    *src_offset = src - src_beg;
+    if (offset < 8)
+        ++*src_offset;
 }
 
-dodBYTE Parser::GETFIV(const dodBYTE * X, int * Xup, dodBYTE * zeroY)
+void Parser::CMDERR() const
 {
-    dodBYTE     A, B;
-
-    *Xup = 0;
-
-    A = *zeroY;
-
-    switch (A)
-    {
-    case 0:
-        B = *X;
-        B = (B >> 3);
-        break;
-    case 1:
-        A = *X;
-        ++X;
-        ++*Xup;
-        B = *X;
-        ASRD(A, B, 6);
-        break;
-    case 2:
-        B = *X;
-        B = (B >> 1);
-        break;
-    case 3:
-        A = *X;
-        ++X;
-        ++*Xup;
-        B = *X;
-        ASRD(A, B, 4);
-        break;
-    case 4:
-        A = *X;
-        ++X;
-        ++*Xup;
-        B = *X;
-        ASRD(A, B, 7);
-        break;
-    case 5:
-        B = *X;
-        B = (B >> 2);
-        break;
-    case 6:
-        A = *X;
-        ++X;
-        ++*Xup;
-        B = *X;
-        ASRD(A, B, 5);
-        break;
-    case 7:
-        B = *X;
-        ++X;
-        ++*Xup;
-        break;
-    }
-
-    A = *zeroY;
-    ++A;
-    A = (A & 7);
-    *zeroY = A;
-
-    return (B & 0x1F);
-}
-
-void Parser::ASRD(dodBYTE & A, dodBYTE & B, int num)
-{
-    signed short D = ((signed short)A << 8) + B;
-    signed short sign = D & 0x8000;
-
-    while (num--)
-        D = (D >> 1) | sign;
-
-    A = D >> 8;
-    B = (dodBYTE)D;
-}
-
-void Parser::CMDERR()
-{
-    viewer.OUTSTI(CERR);
+     viewer.OUTSTI(CERR);
 }
 
 int Parser::PARHND()
