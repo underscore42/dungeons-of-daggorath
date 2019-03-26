@@ -57,18 +57,15 @@ public:
     dodSHORT    LINPTR;
     dodBYTE     PARFLG;
     dodBYTE     PARCNT;
-    dodBYTE     VERIFY;
     dodBYTE     FULFLG;
     dodBYTE     KBDHDR;
     dodBYTE     KBDTAL;
-    dodBYTE     BUFFLG;
     dodBYTE     KBDBUF[33];
     dodBYTE     LINBUF[33];
     dodSHORT    LINEND;
     dodBYTE     TOKEN[MAX_TOKENLEN];
     dodBYTE     TOKEND;
     dodBYTE     STRING[35];
-    dodBYTE     SWCHAR[11];
     dodBYTE     OBJSTR[33];
     dodBYTE     CMDTAB[69];
     dodBYTE     DIRTAB[26];

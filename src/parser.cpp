@@ -23,11 +23,9 @@ extern Viewer viewer;
 Parser::Parser() : LINPTR(0),
     PARFLG(0),
     PARCNT(0),
-    VERIFY(0),
     FULFLG(0),
     KBDHDR(0),
     KBDTAL(0),
-    BUFFLG(0),
     LINEND(0),
     TOKEND(0)
 {
@@ -42,10 +40,6 @@ Parser::Parser() : LINPTR(0),
     }
     STRING[33] = 0;
     STRING[34] = 0;
-    for (ctr = 0; ctr < 11; ++ctr)
-    {
-        SWCHAR[ctr] = 0;
-    }
 
     M_PROM1[0] = I_CR;
     M_PROM1[1] = I_DOT;
@@ -74,11 +68,9 @@ void Parser::Reset()
     LINPTR = 0;
     PARFLG = 0;
     PARCNT = 0;
-    VERIFY = 0;
     FULFLG = 0;
     KBDHDR = 0;
     KBDTAL = 0;
-    BUFFLG = 0;
     LINEND = 0;
     TOKEND = 0;
     int ctr;
@@ -92,10 +84,6 @@ void Parser::Reset()
     }
     STRING[33] = 0;
     STRING[34] = 0;
-    for (ctr = 0; ctr < 11; ++ctr)
-    {
-        SWCHAR[ctr] = 0;
-    }
 }
 
 void Parser::KBDPUT(dodBYTE c)
