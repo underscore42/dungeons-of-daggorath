@@ -32,22 +32,19 @@ extern dodGame      game;
 #define GetTickCount() time(NULL)
 #endif
 
-// Prints a text drawing of the maze
 void Dungeon::printMaze()
 {
-    int idx, row, x;
-    dodBYTE val, n, e, s, w;
-    for (idx = 0; idx < 1024; idx += 32)
+    for (unsigned idx = 0; idx < 1024; idx += 32)
     {
-        for (x = 0; x < 3; ++x)
+        for (unsigned x = 0; x < 3; ++x)
         {
-            for (row = 0; row < 32; ++row)
+            for (unsigned row = 0; row < 32; ++row)
             {
-                val = MAZLND[idx + row];
-                n = (val & 0x03);
-                e = (val & 0x0C) >> 2;
-                s = (val & 0x30) >> 4;
-                w = (val & 0xC0) >> 6;
+                dodBYTE val = MAZLND[idx + row];
+                dodBYTE n = (val & N_WALL);
+                dodBYTE e = (val & E_WALL) >> 2;
+                dodBYTE s = (val & S_WALL) >> 4;
+                dodBYTE w = (val & W_WALL) >> 6;
                 switch (x)
                 {
                 case 0:
@@ -88,58 +85,21 @@ void Dungeon::printMaze()
     printf("\n");
 }
 
-// Constructor
 Dungeon::Dungeon() : VFTPTR(0)
 {
-    SetLEVTABOrig();  //Original seed values will be overwritten (in Player::setInitialObjects())
+    //Original seed values will be overwritten (in Player::setInitialObjects())
     //if new random map game.
+    SetLEVTABOrig();
 
-    MSKTAB[0] = 0x03;
-    MSKTAB[1] = 0x0C;
-    MSKTAB[2] = 0x30;
-    MSKTAB[3] = 0xC0;
-
-    DORTAB[0] = HF_DOR;
-    DORTAB[1] = (HF_DOR << 2);
-    DORTAB[2] = (HF_DOR << 4);
-    DORTAB[3] = (HF_DOR << 6);
-
-    SDRTAB[0] = HF_SDR;
-    SDRTAB[1] = (HF_SDR << 2);
-    SDRTAB[2] = (HF_SDR << 4);
-    SDRTAB[3] = (HF_SDR << 6);
-
-    STPTAB[0] = -1;
-    STPTAB[1] = 0;
-    STPTAB[2] = 0;
-    STPTAB[3] = 1;
-    STPTAB[4] = 1;
-    STPTAB[5] = 0;
-    STPTAB[6] = 0;
-    STPTAB[7] = -1;
-
-    SetVFTTABOrig();  //Original vertical feature table values will be overwritten (in Dungeon::DGNGEN())
+    //Original vertical feature table values will be overwritten (in Dungeon::DGNGEN())
     //if new random map game.
-
-    // Scaffolding Inits
-    NS[3] = '-';
-    NS[2] = '=';
-    NS[1] = '-';
-    NS[0] = ' ';
-    EW[3] = '|';
-    EW[2] = ')';
-    EW[1] = '|';
-    EW[0] = ' ';
+    SetVFTTABOrig();
 }
 
-// This method can probably be streamlined since it
-// was written very early.  It builds the maze.
 void Dungeon::DGNGEN()
 {
-    /* Locals */
     int     mzctr;
     int     maz_idx;
-    int     cell_ctr;
     dodBYTE a_row;
     dodBYTE a_col;
     dodBYTE b_row;
@@ -148,7 +108,6 @@ void Dungeon::DGNGEN()
     dodBYTE DST;
     RowCol  DROW;
     RowCol  ROW;
-    int     spin;
 
     /* Phase 1: Create Maze */
 
@@ -158,8 +117,9 @@ void Dungeon::DGNGEN()
         MAZLND[mzctr] = 0xFF;
     }
 
-    rng.setSEED(LEVTAB[game.LEVEL], LEVTAB[game.LEVEL + 1], LEVTAB[game.LEVEL + 2]); //Initialize Random Number Generator
-    cell_ctr = 500;  // Room Counter
+    //Initialize Random Number Generator
+    rng.setSEED(LEVTAB[game.LEVEL], LEVTAB[game.LEVEL + 1], LEVTAB[game.LEVEL + 2]);
+    int cell_ctr = 500;  // Room Counter
 
     /* Set Starting Room */
     if (!game.RandomMaze || game.IsDemo)
@@ -169,7 +129,9 @@ void Dungeon::DGNGEN()
         a_row = (rng.RANDOM() & 31);
         DROW.setRC(a_row, a_col);
         RndDstDir(&DIR, &DST);
-        SetVFTTABOrig();  //Make sure the vertical feature table isn't overwritten from pervious new game.
+
+        //Make sure the vertical feature table isn't overwritten from previous new game.
+        SetVFTTABOrig();
     }
     else      //Is this an original game?  No:
     {
@@ -200,7 +162,7 @@ void Dungeon::DGNGEN()
             player.PROW = a_row;
             player.PCOL = a_col;
 
-            //Override veritical features.
+            //Override vertical features.
             //Will override other level's col & row during map generation.
             SetVFTTABRandomMap();
             VFTTAB[1] = a_row;
@@ -217,7 +179,7 @@ void Dungeon::DGNGEN()
         --cell_ctr;
     }  //Is this an original game?
 
-
+    // Carve out all the rooms
     while (cell_ctr > 0)
     {
         /* Take a step */
@@ -242,9 +204,9 @@ void Dungeon::DGNGEN()
         {
             FRIEND(ROW);
             if (NEIBOR[3] + NEIBOR[0] + NEIBOR[1] == 0 ||
-                    NEIBOR[1] + NEIBOR[2] + NEIBOR[5] == 0 ||
-                    NEIBOR[5] + NEIBOR[8] + NEIBOR[7] == 0 ||
-                    NEIBOR[7] + NEIBOR[6] + NEIBOR[3] == 0)
+                NEIBOR[1] + NEIBOR[2] + NEIBOR[5] == 0 ||
+                NEIBOR[5] + NEIBOR[8] + NEIBOR[7] == 0 ||
+                NEIBOR[7] + NEIBOR[6] + NEIBOR[3] == 0)
             {
                 RndDstDir(&DIR, &DST);
                 continue;
@@ -317,7 +279,7 @@ void Dungeon::DGNGEN()
             while (MAZLND[maz_idx] == 0xFF);
         }
         while ((game.LEVEL == 0 && VFTTAB[1] == a_row && VFTTAB[2] == a_col) ||
-                (game.LEVEL == 1 && VFTTAB[5] == a_row && VFTTAB[6] == a_col));
+               (game.LEVEL == 1 && VFTTAB[5] == a_row && VFTTAB[6] == a_col));
         switch (game.LEVEL)
         {
         case 0:
@@ -344,19 +306,14 @@ void Dungeon::DGNGEN()
         }
     }
 
-
-
     // Spin the RNG
+    int spin;
     if (scheduler.curTime == 0)
     {
         if (game.LEVEL == 0)
-        {
             spin = 6;
-        }
         else
-        {
             spin = 21;
-        }
     }
     else
     {
@@ -370,7 +327,6 @@ void Dungeon::DGNGEN()
     }
 }
 
-// Adds vertical features
 void Dungeon::CalcVFI()
 {
     dodBYTE lvl = game.LEVEL;
@@ -385,26 +341,21 @@ void Dungeon::CalcVFI()
     while (lvl != 0xFF);
 }
 
-// Checks if a hole/ladder is in cell
-// It has to check above and below, since each
-// vertical feature is stored only once in the VFT
-dodBYTE Dungeon::VFIND(RowCol rc)
+dodBYTE Dungeon::VFIND(const RowCol& rc) const
 {
     int u = VFTPTR;
     dodBYTE a = 0;
-    bool res;
-    res = VFINDsub(a, u, &rc);
+    bool res = VFINDsub(a, u, rc);
     if (res == true)
         return a;
-    res = VFINDsub(a, u, &rc);
+    res = VFINDsub(a, u, rc);
     if (res == true)
         return a + 2;
     else
         return -1;
 }
 
-// Used by VFIND
-bool Dungeon::VFINDsub(dodBYTE & a, int & u, RowCol * rc)
+bool Dungeon::VFINDsub(dodBYTE & a, int & u, const RowCol& rc) const
 {
     dodBYTE r, c;
 
@@ -416,28 +367,20 @@ bool Dungeon::VFINDsub(dodBYTE & a, int & u, RowCol * rc)
         r = VFTTAB[u++];
         c = VFTTAB[u++];
     }
-    while ( !((r == rc->row) && (c == rc->col)) );
+    while ( !((r == rc.row) && (c == rc.col)) );
     return true;
 }
 
-// Checks for a wall in the given direction
-bool Dungeon::TryMove(dodBYTE dir)
+bool Dungeon::TryMove(dodBYTE dir) const
 {
-    int idx;
-    dodBYTE a;
-    idx = RC2IDX(player.PROW, player.PCOL);
-    a = ((MAZLND[idx] >> (dir * 2)) & 3);
-    if (a != 3)
-        return true;
-    else
-        return false;
+    const dodBYTE c = cell(player.PROW, player.PCOL);
+    const dodBYTE a = ((c >> (dir * 2)) & 3);
+
+    return a != 3;
 }
 
-// Adds doors
-void Dungeon::MAKDOR(dodBYTE * table)
+void Dungeon::MAKDOR(const dodBYTE * table)
 {
-    dodBYTE a_row;
-    dodBYTE a_col;
     int     maz_idx;
     dodBYTE val;
     dodBYTE DIR;
@@ -447,8 +390,8 @@ void Dungeon::MAKDOR(dodBYTE * table)
     {
         do
         {
-            a_col = (rng.RANDOM() & 31);
-            a_row = (rng.RANDOM() & 31);
+            const dodBYTE a_col = (rng.RANDOM() & 31);
+            const dodBYTE a_row = (rng.RANDOM() & 31);
             ROW.setRC(a_row, a_col);
             maz_idx = RC2IDX(a_row, a_col);
             val = MAZLND[maz_idx];
@@ -469,41 +412,36 @@ void Dungeon::MAKDOR(dodBYTE * table)
     MAZLND[maz_idx] |= table[DIR];
 }
 
-// Finds surrounding cells
 void Dungeon::FRIEND(RowCol RC)
 {
-    dodBYTE r3, c3;
     int u = 0;
 
-    for (r3 = RC.row; r3 <= (RC.row + 2); ++r3)
+    for (dodBYTE r3 = RC.row; r3 <= (RC.row + 2); ++r3)
     {
-        for (c3 = RC.col; c3 <= (RC.col + 2); ++c3)
+        for (dodBYTE c3 = RC.col; c3 <= (RC.col + 2); ++c3)
         {
-            if (BORDER((r3 - 1), (c3 - 1)) == false)
+            if (BORDER(r3 - 1, c3 - 1) == false)
             {
                 NEIBOR[u] = 0xFF;
             }
             else
             {
-                NEIBOR[u] = MAZLND[RC2IDX((r3 - 1), (c3 - 1))];
+                NEIBOR[u] = cell(r3 - 1, c3 - 1);
             }
             ++u;
         }
     }
 }
 
-// Checks if a step can be taken from the given row/col
-// in the given direction
-bool Dungeon::STEPOK(dodBYTE R, dodBYTE C, dodBYTE dir)
+bool Dungeon::STEPOK(dodBYTE R, dodBYTE C, dodBYTE dir) const
 {
     R += STPTAB[dir * 2];
     C += STPTAB[(dir * 2) + 1];
     if (BORDER(R, C) == false) return false;
-    if (MAZLND[RC2IDX(R, C)] == 255) return false;
+    if (cell(R, C) == 255) return false;
     return true;
 }
 
-//Sets original vertical feature table values.
 void Dungeon::SetVFTTABOrig()
 {
     VFTTAB[0] = -1;
@@ -550,7 +488,6 @@ void Dungeon::SetVFTTABOrig()
     VFTTAB[41] = -1;
 }
 
-//Sets original maze seed values.
 void Dungeon::SetLEVTABOrig()
 {
     LEVTAB[0] = 0x73;
@@ -562,8 +499,6 @@ void Dungeon::SetLEVTABOrig()
     LEVTAB[6] = 0x87;
 }
 
-//Override original vertical feature table values with new ones.
-//Will override other level's col & row when during map generation.
 void Dungeon::SetVFTTABRandomMap()
 {
     VFTTAB[0] = 0;
@@ -586,7 +521,6 @@ void Dungeon::SetVFTTABRandomMap()
     VFTTAB[17] = -1;
 }
 
-//Override seeds with true random numbers.
 void Dungeon::SetLEVTABRandomMap()
 {
     srand(GetTickCount());
