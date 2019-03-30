@@ -14,8 +14,6 @@ is held by Douglas J. Morgan.
 //
 // Implementation of dodGame class.
 
-//#include <stdio.h>
-
 #include "dodgame.h"
 #include "player.h"
 #include "object.h"
@@ -48,12 +46,10 @@ extern Scheduler    scheduler;
 #define D_TURN_RIGHT    "023305"
 #define D_END           "00"
 
-// Constructor
 dodGame::dodGame() : LEVEL(2), AUTFLG(true), hasWon(false),
     demoRestart(true), DEMOPTR(0)
 {
     Utils::LoadFromHex(DEMO_CMDS,
-//      D_LOOK
                        D_EXAMINE
                        D_PULL_RIGHT D_TORCH
                        D_USE_RIGHT
@@ -67,57 +63,8 @@ dodGame::dodGame() : LEVEL(2), AUTFLG(true), hasWon(false),
                        D_TURN_RIGHT D_MOVE D_MOVE
                        D_END
                       );
-
-    /*  DEMO_CMDS[0] = 1;
-        DEMO_CMDS[1] = 15;      // EXAMINE
-        DEMO_CMDS[2] = 3;
-        DEMO_CMDS[3] = 38;      // PULL
-        DEMO_CMDS[4] = 5;       // RIGHT
-        DEMO_CMDS[5] = 25;      // TORCH
-        DEMO_CMDS[6] = 2;
-        DEMO_CMDS[7] = 55;      // USE
-        DEMO_CMDS[8] = 5;       // RIGHT
-        DEMO_CMDS[9] = 1;
-        DEMO_CMDS[10] = 30; // LOOK
-        DEMO_CMDS[11] = 1;
-        DEMO_CMDS[12] = 34; // MOVE
-        DEMO_CMDS[13] = 3;
-        DEMO_CMDS[14] = 38; // PULL
-        DEMO_CMDS[15] = 1;      // LEFT
-        DEMO_CMDS[16] = 15; // SHIELD
-
-        DEMO_CMDS[17] = 3;
-        DEMO_CMDS[18] = 38; // PULL
-        DEMO_CMDS[19] = 5;      // RIGHT
-        DEMO_CMDS[20] = 20; // SWORD
-        DEMO_CMDS[21] = 1;
-        DEMO_CMDS[22] = 34; // MOVE
-        DEMO_CMDS[23] = 1;
-        DEMO_CMDS[24] = 34; // MOVE
-        DEMO_CMDS[25] = 2;
-        DEMO_CMDS[26] = 1;      // ATTACK
-        DEMO_CMDS[27] = 5;      // RIGHT
-
-        DEMO_CMDS[28] = 2;
-        DEMO_CMDS[29] = 51; // TURN
-        DEMO_CMDS[30] = 5;      // RIGHT
-        DEMO_CMDS[31] = 1;
-        DEMO_CMDS[32] = 34; // MOVE
-        DEMO_CMDS[33] = 1;
-        DEMO_CMDS[34] = 34; // MOVE
-        DEMO_CMDS[35] = 1;
-        DEMO_CMDS[36] = 34; // MOVE
-        DEMO_CMDS[37] = 2;
-        DEMO_CMDS[38] = 51; // TURN
-        DEMO_CMDS[39] = 5;      // RIGHT
-        DEMO_CMDS[40] = 1;
-        DEMO_CMDS[41] = 34; // MOVE
-        DEMO_CMDS[42] = 1;
-        DEMO_CMDS[43] = 34; // MOVE
-        DEMO_CMDS[44] = -1;*/
 }
 
-// Game initialization
 void dodGame::COMINI()
 {
     Uint32 ticks1, ticks2;
@@ -132,8 +79,6 @@ void dodGame::COMINI()
     viewer.VXSCALf = 128.0f;
     viewer.VYSCALf = 128.0f;
     AUTFLG = viewer.ShowFade(Viewer::FADE_BEGIN);
-    //AUTFLG = scheduler.fadeLoop();
-    //AUTFLG = false; // TAKE THIS LINE OUT !!!!!!!!!! [Prevents demo from starting]
     player.setInitialObjects(AUTFLG);
     viewer.displayPrepare();
     viewer.display_mode = Viewer::MODE_TITLE;
@@ -152,7 +97,7 @@ void dodGame::COMINI()
     if (AUTFLG)
     {
         // do map
-        viewer.display_mode = Viewer::MODE_TITLE;
+        viewer.display_mode = Viewer::MODE_MAP;
         viewer.showSeerMap = true;
         --viewer.UPDATE;
         viewer.draw_game();
@@ -171,8 +116,6 @@ void dodGame::COMINI()
 
 void dodGame::Restart()
 {
-    Uint32 ticks1, ticks2;
-
     object.Reset();
     creature.Reset();
     parser.Reset();
@@ -192,7 +135,8 @@ void dodGame::Restart()
     viewer.draw_game();
 
     // Delay with "PREPARE!" on screen
-    ticks1 = SDL_GetTicks();
+    const Uint32 ticks1 = SDL_GetTicks();
+    Uint32 ticks2;
     do
     {
         oslink.process_events();
@@ -215,7 +159,6 @@ void dodGame::LoadGame()
     viewer.PROMPT();
 }
 
-// Initializes 3D viewer
 void dodGame::INIVU()
 {
     viewer.clearArea(&viewer.TXTSTS);
@@ -228,11 +171,9 @@ void dodGame::INIVU()
     player.PLOOK();
 }
 
-// Pause 1.5 seconds
 void dodGame::WAIT()
 {
-    Uint32 ticks1;
-    ticks1 = SDL_GetTicks();
+    const Uint32 ticks1 = SDL_GetTicks();
     scheduler.curTime = ticks1;
 
     do
@@ -248,5 +189,5 @@ void dodGame::WAIT()
         }
         scheduler.curTime = SDL_GetTicks();
     }
-    while (scheduler.curTime < ticks1 + 1500);
+    while (scheduler.curTime < ticks1 + 1350);
 }

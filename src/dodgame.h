@@ -25,33 +25,63 @@ is held by Douglas J. Morgan.
 class dodGame
 {
 public:
-    // Constructor
+
     dodGame();
 
-    // Public Interface
-    void COMINI();  // Common initialization
-    void INIVU();   // View initialization
+    // Common initialization
+    void COMINI();
+
+    // Initializes 3D viewer
+    void INIVU();
+
+    // Starts a new game
     void Restart();
+
+    // Loads a game
     void LoadGame();
+
+    // Pause 1.35 seconds
     void WAIT();
 
-    // Public Data Fields
-    dodBYTE LEVEL;  // Dungeon level (0-4)
-    bool    IsDemo;
-    bool    RandomMaze;
-    bool    ShieldFix;
-    bool    VisionScroll;
-    bool    CreaturesIgnoreObjects;
-    bool    CreaturesInstaRegen;
-    bool    MarkDoorsOnScrollMaps;
-    bool    AUTFLG; // Autoplay (demo) flag
-    bool    hasWon;
-    bool    demoRestart;
-    int     DEMOPTR;
-    dodBYTE DEMO_CMDS[256];
+    // Dungeon level (0-4)
+    dodBYTE LEVEL;
 
-private:
-    // Data Fields
+    // If we're showing the demo gameplay in the intro
+    bool IsDemo;
+
+    // If random mazes should be created
+    bool RandomMaze;
+
+    // If we should fix the physical and magical defense values for bronze and
+    // leather shield. These values were wrong in the original game.
+    bool ShieldFix;
+
+    // Allow player to find a vision scroll on the first level
+    bool VisionScroll;
+
+    // If creatures should ignore objects instead of picking them up
+    bool CreaturesIgnoreObjects;
+
+    // If we instantly spawn a new creature once the player kills a creature
+    bool CreaturesInstaRegen;
+
+    // If we mark doors on the map
+    bool MarkDoorsOnScrollMaps;
+
+    // Autoplay (demo) flag
+    bool AUTFLG;
+
+    // true if the player won the game
+    bool hasWon;
+
+    // if we should play the demo again
+    bool demoRestart;
+
+    // current offset into DEMO_CMDS
+    int DEMOPTR;
+
+    // commands for the intro gameplay demo
+    dodBYTE DEMO_CMDS[256];
 };
 
 #endif // DOD_GAME_HEADER
