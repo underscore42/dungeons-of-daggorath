@@ -243,7 +243,6 @@ public:
     dodBYTE     exam1[9];
     dodBYTE     exam2[8];
     dodBYTE     exam3[7];
-    dodBYTE     NEWLUK;
 
     int         LINES[11];
 
@@ -285,13 +284,8 @@ private:
     // Data Fields
     dodSHORT    VCNTRX;
     dodSHORT    VCNTRY;
-    dodBYTE     OROW;
-    dodBYTE     OCOL;
     dodBYTE     MAGFLG;
-    dodBYTE     PASFLG;
     int         HLFSCL;
-    int         BAKSCL;
-    int         NORSCL;
 public:
     int A_VLA[33];
     int B_VLA[49];

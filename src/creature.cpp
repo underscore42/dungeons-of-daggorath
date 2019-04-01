@@ -353,7 +353,6 @@ int Creature::CMOVE(int task, int cidx)
                         CCBLND[cidx].P_CCCOL == player.PCOL)
                 {
                     viewer.PUPDAT();
-                    viewer.NEWLUK = 0;
                     scheduler.TCBLND[task].next_time = scheduler.curTime +
                                                        CCBLND[cidx].P_CCTAT;
                     return 0;
@@ -484,7 +483,6 @@ int Creature::CMOVE(int task, int cidx)
                         CCBLND[cidx].P_CCCOL == player.PCOL)
                 {
                     viewer.PUPDAT();
-                    viewer.NEWLUK = 0;
                     scheduler.TCBLND[task].next_time = scheduler.curTime +
                                                        CCBLND[cidx].P_CCTAT;
                     return 0;
@@ -531,7 +529,6 @@ int Creature::CMOVE(int task, int cidx)
                         CCBLND[cidx].P_CCCOL == player.PCOL)
                 {
                     viewer.PUPDAT();
-                    viewer.NEWLUK = 0;
                     scheduler.TCBLND[task].next_time = scheduler.curTime +
                                                        CCBLND[cidx].P_CCTAT;
                     return 0;
@@ -571,7 +568,6 @@ int Creature::CMOVE(int task, int cidx)
                             CCBLND[cidx].P_CCCOL == player.PCOL)
                     {
                         viewer.PUPDAT();
-                        viewer.NEWLUK = 0;
                         scheduler.TCBLND[task].next_time = scheduler.curTime +
                                                            CCBLND[cidx].P_CCTAT;
                         return 0;
@@ -594,7 +590,6 @@ int Creature::CMOVE(int task, int cidx)
             CCBLND[cidx].P_CCCOL == player.PCOL)
     {
         viewer.PUPDAT();
-        viewer.NEWLUK = 0;
         scheduler.TCBLND[task].next_time = scheduler.curTime +
                                            CCBLND[cidx].P_CCTAT;
         return 0;
@@ -753,7 +748,6 @@ bool Creature::CWALK(dodBYTE dir, CCB * cr)
         cr->P_CCCOL = cc;
         cr->P_CCDIR = DIR;
 
-        --viewer.NEWLUK;
         return true;
     }
 

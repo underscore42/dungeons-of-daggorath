@@ -451,13 +451,11 @@ int Player::BURNER()
     dodSHORT A;
     if (PTORCH == -1)
     {
-        --viewer.NEWLUK;
         return 0;
     }
     A = object.OCBLND[PTORCH].P_OCXX0;
     if (A == 0)
     {
-        --viewer.NEWLUK;
         return 0;
     }
     --A;
@@ -483,7 +481,6 @@ int Player::BURNER()
         }
     }
 
-    --viewer.NEWLUK;
     return 0;
 }
 

@@ -324,10 +324,7 @@ void Viewer::Reset()
     HLFSTP = 0;
     BAKSTP = 0;
     MAGFLG = 0;
-    PASFLG = 0;
-    NORSCL = 0;
     HLFSCL = 10;
-    BAKSCL = 11;
     TXBFLG = 0;
     TXB_U = 0;
     tcaret = 0;
@@ -967,7 +964,6 @@ int Viewer::LUKNEW()
         return 0;
     }
 
-    NEWLUK = 0;
     PUPDAT();
     return 0;
 }
