@@ -22,62 +22,94 @@ is held by Douglas J. Morgan.
 class Creature
 {
 public:
-    // Constructor
     Creature();
 
-    // Public Interface
-    void        NEWLVL();
-    int         CREGEN();
-    int         CMOVE(int task, int cidx);
-    bool        CWALK(dodBYTE dir, CCB * cr);
-    bool        CFIND(dodBYTE rw, dodBYTE cl);
-    int         CFIND2(RowCol rc);
-    void        Reset();
-    void        LoadSounds();
-    void        UpdateCreSpeed();
+    void Reset();
 
-    // Public Data Fields
-    CCB         CCBLND[32];
-    dodBYTE     FRZFLG;
-    int         CMXPTR;
-    dodBYTE     CMXLND[60];
-    dodBYTE     MOVTAB[7];
+    // Load creature sound effects
+    void LoadSounds();
+
+    // This routine creates a new dungeon level, filling it with objects and
+    // creatures. It should probably be moved to the Dungeon class.
+    void NEWLVL();
+
+    // This method is called from the scheduler once every five
+    // minutes. It will generate random new creatures.
+    int CREGEN();
+
+    // This method is called from the scheduler to move the creatures. This is
+    // where most of the creature logic resides. It's frequency is determined by
+    // the creature type and its location relative to the player.
+    int CMOVE(int task, int cidx);
+
+    // This routine attempts to move the creature in the given direction.
+    bool CWALK(dodBYTE dir, CCB * cr) const;
+
+    // Returns false if a creature exists at position rw, cl.
+    bool CFIND(dodBYTE rw, dodBYTE cl) const;
+
+    // Checks if a creature exists at rc and returns its index in CCBLND
+    // else returns -1.
+    int CFIND2(RowCol rc) const;
+
+    // Update creature speed
+    void UpdateCreSpeed();
+
+    // All creatures in the current level
+    CCB CCBLND[32];
+
+    // Indicates if all creatures are frozen
+    dodBYTE FRZFLG;
+
+    // Current offset into CMXLND
+    int CMXPTR;
+
+    // Tells us how many creatures for each type should be created in each level
+    dodBYTE CMXLND[60];
+
     Mix_Chunk * creSound[12];
     Mix_Chunk * clank;
     Mix_Chunk * kaboom;
     Mix_Chunk * buzz;
-    int         creChannel;
-    int         creChannelv;
-    int         creSpeedMul;
 
-    enum   // creature ID#s
+    // Sound channels
+    const int creChannel;
+    const int creChannelv;
+
+    // Creature speed multiplier
+    int creSpeedMul;
+
+    enum creature_type_t : dodBYTE
     {
-        CRT_SPIDER = 0,
-        CRT_VIPER = 1,
-        CRT_GIANT1 = 2,
-        CRT_BLOB = 3,
-        CRT_KNIGHT1 = 4,
-        CRT_GIANT2 = 5,
+        CRT_SPIDER   = 0,
+        CRT_VIPER    = 1,
+        CRT_GIANT1   = 2,
+        CRT_BLOB     = 3,
+        CRT_KNIGHT1  = 4,
+        CRT_GIANT2   = 5,
         CRT_SCORPION = 6,
-        CRT_KNIGHT2 = 7,
-        CRT_WRAITH = 8,
-        CRT_GALDROG = 9,
-        CRT_WIZIMG = 10,
-        CRT_WIZARD = 11,
+        CRT_KNIGHT2  = 7,
+        CRT_WRAITH   = 8,
+        CRT_GALDROG  = 9,
+        CRT_WIZIMG   = 10,
+        CRT_WIZARD   = 11,
+        CTYPES       = 12
     };
 
 private:
-    // Internal Implementation
-    void CBIRTH(dodBYTE a);
+    // Creates a new creature and places it in the maze
+    void CBIRTH(creature_type_t typ);
 
-    // Data Fields
-    CDB         CDBTAB[12];
+    // Used when creature is on same row or column as the player.
+    // Returns false if the player is reachable from the creature's position.
+    bool moveTowardPlayer(int task, int cidx, int dir);
 
-    // Constants
-    enum
-    {
-        CTYPES = 12,
-    };
+    // Update next_time of task depending on whether the creature is attacking
+    // the player or just moving around.
+    void updateTaskTime(int task, int cidx) const;
+
+    // All creature types and their stats
+    CDB CDBTAB[12];
 };
 
 #endif // DOD_CREATURE_HEADER
