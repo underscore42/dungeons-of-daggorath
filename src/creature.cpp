@@ -73,8 +73,8 @@ void Creature::UpdateCreSpeed()
 {
     for (int ccc = 0; ccc < 12; ++ccc)
     {
-        CDBTAB[ccc].P_CDTMV = ((int)((float)CDBTAB[ccc].P_CDTMV * (float)creSpeedMul / 100.0));
-        CDBTAB[ccc].P_CDTAT = ((int)((float)CDBTAB[ccc].P_CDTAT * (float)creSpeedMul / 100.0));
+        CDBTAB[ccc].P_CDTMV = ((int)((float)CDBTAB[ccc].P_CDTMV * (float)creSpeedMul / 100.0f));
+        CDBTAB[ccc].P_CDTAT = ((int)((float)CDBTAB[ccc].P_CDTAT * (float)creSpeedMul / 100.0f));
     }
 }
 
