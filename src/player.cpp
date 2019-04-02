@@ -35,7 +35,6 @@ extern Scheduler    scheduler;
 extern Parser       parser;
 extern Dungeon      dungeon;
 
-// Constructor
 Player::Player() : PPOW(PLRBLK.P_ATPOW),
     PMGO(PLRBLK.P_ATMGO),
     PMGD(PLRBLK.P_ATMGD),
@@ -53,7 +52,7 @@ void Player::Reset()
 {
     PROW = 12;
     PCOL = 22;
-    PPOW = ((0x17 << 8) | 160);
+    PPOW = ((0x17 << 8) | 160); // = 6048
     POBJWT = 35;
     FAINT = 0;
     PRLITE = 0;
@@ -76,8 +75,6 @@ void Player::Reset()
     turning = false;
 }
 
-// Public Interface
-
 void Player::LoadSounds()
 {
     klink = Utils::LoadSound("12_klink.wav");
@@ -85,16 +82,8 @@ void Player::LoadSounds()
     bang = Utils::LoadSound("15_bang.wav");
 }
 
-// This method gets called from the scheduler as often
-// as possible.  It retrieves keyboard input, or commands
-// from the demo data.
 int Player::PLAYER()
 {
-    int tokCnt, tokCtr;
-    dodBYTE objstr[10];
-    dodBYTE * X, * U;
-    int Xup;
-
     // Update Task's next_time
     scheduler.TCBLND[Scheduler::TID_PLAYER].next_time = scheduler.curTime +
             scheduler.TCBLND[Scheduler::TID_PLAYER].frequency;
@@ -143,7 +132,7 @@ int Player::PLAYER()
     else
     {
         // Process Autoplay Commands
-        tokCnt = game.DEMO_CMDS[game.DEMOPTR++];
+        const int tokCnt = game.DEMO_CMDS[game.DEMOPTR++];
         if (tokCnt == 0)
         {
             game.WAIT();
@@ -154,8 +143,9 @@ int Player::PLAYER()
         }
 
         // Feed next autoplay command to HUMAN
-        tokCtr = 1;
-
+        dodBYTE * X, * U;
+        int Xup;
+        int tokCtr = 1;
         do
         {
             if (tokCtr == 1)
@@ -171,6 +161,7 @@ int Player::PLAYER()
                 X = &object.GENTAB[game.DEMO_CMDS[game.DEMOPTR]];
             }
             ++game.DEMOPTR;
+            dodBYTE objstr[10];
             U = &objstr[1];
             parser.EXPAND(X, &Xup, U);
             ++U;
@@ -195,15 +186,13 @@ int Player::PLAYER()
 
 bool Player::HUMAN(dodBYTE c)
 {
-    int     res;
-    dodBYTE A, B;
-
     // Check if we are displaying the map
     if (HEARTF == 0)
     {
         game.INIVU();
         viewer.PROMPT();
     }
+
     if (c == parser.I_CR)
     {
 carriage_return:
@@ -220,57 +209,28 @@ carriage_return:
         }
 
         // dispatch to proper routine
-        res = parser.PARSER(&parser.CMDTAB[0], A, B, true);
+        dodBYTE A, B;
+        const int res = parser.PARSER(&parser.CMDTAB[0], A, B, true);
         if (res == 1)
         {
             // dispatch
             switch (A)
             {
-            case Parser::CMD_ATTACK:
-                PATTK();
-                break;
-            case Parser::CMD_CLIMB:
-                PCLIMB();
-                break;
-            case Parser::CMD_DROP:
-                PDROP();
-                break;
-            case Parser::CMD_EXAMINE:
-                PEXAM();
-                break;
-            case Parser::CMD_GET:
-                PGET();
-                break;
-            case Parser::CMD_INCANT:
-                PINCAN();
-                break;
-            case Parser::CMD_LOOK:
-                PLOOK();
-                break;
-            case Parser::CMD_MOVE:
-                PMOVE();
-                break;
-            case Parser::CMD_PULL:
-                PPULL();
-                break;
-            case Parser::CMD_REVEAL:
-                PREVEA();
-                break;
-            case Parser::CMD_STOW:
-                PSTOW();
-                break;
-            case Parser::CMD_TURN:
-                PTURN();
-                break;
-            case Parser::CMD_USE:
-                PUSE();
-                break;
-            case Parser::CMD_ZLOAD:
-                PZLOAD();
-                break;
-            case Parser::CMD_ZSAVE:
-                PZSAVE();
-                break;
+            case Parser::CMD_ATTACK:  PATTK(); break;
+            case Parser::CMD_CLIMB:   PCLIMB(); break;
+            case Parser::CMD_DROP:    PDROP(); break;
+            case Parser::CMD_EXAMINE: PEXAM(); break;
+            case Parser::CMD_GET:     PGET();  break;
+            case Parser::CMD_INCANT:  PINCAN(); break;
+            case Parser::CMD_LOOK:    PLOOK(); break;
+            case Parser::CMD_MOVE:    PMOVE(); break;
+            case Parser::CMD_PULL:    PPULL(); break;
+            case Parser::CMD_REVEAL:  PREVEA(); break;
+            case Parser::CMD_STOW:    PSTOW(); break;
+            case Parser::CMD_TURN:    PTURN(); break;
+            case Parser::CMD_USE:     PUSE();  break;
+            case Parser::CMD_ZLOAD:   PZLOAD(); break;
+            case Parser::CMD_ZSAVE:   PZSAVE(); break;
             }
         }
         if (res == -1)
@@ -308,9 +268,6 @@ carriage_return:
     return true;
 }
 
-// This method gets called from the scheduler with a
-// frequency equal to the current heart rate.  It performs
-// damage recovery, indicated by slowing the heartbeat.
 int Player::HSLOW()
 {
     PLRBLK.P_ATDAM -= (PLRBLK.P_ATDAM >> 6);
@@ -327,13 +284,8 @@ int Player::HSLOW()
     return 0;
 }
 
-// Calculates heartbeat based on power level and damage.
-// Also processes fainting and death.
 void Player::HUPDAT()
 {
-    Uint32 ticks1;
-    SDL_Event event;
-
     // Heartrate in source:
     //
     //               PPOW * 64
@@ -344,8 +296,7 @@ void Player::HUPDAT()
     // so that [(1/5) == 1], [(5/5) == 2], [(10/5) == 3], etc.
     // The formula below reflects that peculiarity by only subtracting 18.
     //
-    HEARTR = (((PLRBLK.P_ATPOW) * 64) /
-              ((PLRBLK.P_ATPOW) + ((PLRBLK.P_ATDAM) * 2))) - 18;
+    HEARTR = ((PLRBLK.P_ATPOW * 64) / (PLRBLK.P_ATPOW + PLRBLK.P_ATDAM * 2)) - 18;
 
     if (FAINT == 0)
     {
@@ -362,7 +313,7 @@ void Player::HUPDAT()
                 --viewer.UPDATE;
                 viewer.draw_game();
                 --viewer.RLIGHT;
-                ticks1 = SDL_GetTicks();
+                const Uint32 ticks1 = SDL_GetTicks();
                 scheduler.curTime = ticks1;
                 do
                 {
@@ -393,7 +344,7 @@ void Player::HUPDAT()
                 viewer.draw_game();
                 ++viewer.MLIGHT;
                 ++viewer.RLIGHT;
-                ticks1 = SDL_GetTicks();
+                const Uint32 ticks1 = SDL_GetTicks();
                 scheduler.curTime = ticks1;
                 do
                 {
@@ -412,9 +363,11 @@ void Player::HUPDAT()
             --viewer.UPDATE;
         }
     }
+
     if (PLRBLK.P_ATPOW < PLRBLK.P_ATDAM)
     {
         // Do death
+        SDL_Event event;
         while(SDL_PollEvent(&event))
         {
             ; // clear event buffer
@@ -422,25 +375,9 @@ void Player::HUPDAT()
         viewer.clearArea(&viewer.TXTSTS);
         viewer.clearArea(&viewer.TXTPRI);
         viewer.ShowFade(Viewer::FADE_DEATH);
-        //scheduler.deathFadeLoop();
     }
 }
 
-// This method is called every five seconds.  It will
-// manage the lit torch's timers.
-//
-// The full burn time is stored in XX0 in 5-second units,
-// so 15 minutes equals 180 5-second units.
-//
-// The magical light values and physical light values are
-// stored in minutes.  Hence the conversion half way thorugh.
-//
-// This is a hack to give the main timer more granularity,
-// so that it doesn't lose a whole minute on each level change,
-// but I had to leave the other values as minutes because they
-// are used elsewhere in a complicated formula to determine
-// the ligthing (line pixelation/fade) values for the 3D viewer.
-//
 int Player::BURNER()
 {
     // Update Task's next_time
@@ -448,16 +385,13 @@ int Player::BURNER()
         scheduler.curTime +
         scheduler.TCBLND[Scheduler::TID_TORCHBURN].frequency;
 
-    dodSHORT A;
     if (PTORCH == -1)
-    {
         return 0;
-    }
-    A = object.OCBLND[PTORCH].P_OCXX0;
+
+    dodSHORT A = object.OCBLND[PTORCH].P_OCXX0;
     if (A == 0)
-    {
         return 0;
-    }
+
     --A;
     object.OCBLND[PTORCH].P_OCXX0 = A;
 
@@ -484,15 +418,13 @@ int Player::BURNER()
     return 0;
 }
 
-// Used during initialization to set data for either
-// the built-in demo or starting a live game
 void Player::setInitialObjects(bool isDemo)
 {
     int x, y;
 
+    game.IsDemo = isDemo;
     if (isDemo)
     {
-        game.IsDemo = true;
         game.LEVEL = 2;
         dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
         // demo: iron sword, pine torch, leather shield
@@ -519,7 +451,6 @@ void Player::setInitialObjects(bool isDemo)
     }
     else
     {
-        game.IsDemo = false;
         game.LEVEL = 0;
         if (!game.RandomMaze)  //Do we have an original maze?  Yes:
             dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
@@ -576,65 +507,23 @@ void Player::setInitialObjects(bool isDemo)
     }
 }
 
-// Processes ATTACK command
 void Player::PATTK()
 {
-    int res, idx, cidx, optr, val;
-    OCB *U;
-    dodBYTE r, c;
-    SDL_Event event;
-    Uint32 ticks1, ticks2;
-
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
-    {
         return;
-    }
 
-    if (res == 0)
-    {
-        idx = PLHAND;
-        if (idx == -1)
-        {
-            U = &EMPHND;
-        }
-        else
-        {
-            U = &object.OCBLND[idx];
-        }
-    }
-    else
-    {
-        idx = PRHAND;
-        if (idx == -1)
-        {
-            U = &EMPHND;
-        }
-        else
-        {
-            U = &object.OCBLND[idx];
-        }
-    }
+    const int idx = res == 0 ? PLHAND : PRHAND;
+
+    OCB *U = idx == -1 ? &EMPHND : &object.OCBLND[idx];
 
     PMGO = U->P_OCMGO;
     PPHO = U->P_OCPHO;
-    PDAM += ((PPOW * (((int) PMGO + (int) PPHO) / 8)) >> 7);
+    PDAM += (PPOW * (((int) PMGO + (int) PPHO) / 8)) >> 7;
 
     // make sound for appropriate object
-    Mix_PlayChannel(object.objChannel,
-                    object.objSound[U->obj_type], 0);
-    while (Mix_Playing(object.objChannel) == 1)
-    {
-        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-        {
-            scheduler.CLOCK();
-            if (game.AUTFLG && game.demoRestart == false)
-            {
-                return;
-            }
-        }
-        scheduler.curTime = SDL_GetTicks();
-    }
+    if (!playSound(object.objChannel, object.objSound[U->obj_type], true))
+        return;
 
     if (U->obj_id >= Object::OBJ_RING_ENERGY && U->obj_id <= Object::OBJ_RING_FIRE)
     {
@@ -651,7 +540,7 @@ void Player::PATTK()
         }
     }
 
-    cidx = creature.CFIND2(RowCol(PROW, PCOL));
+    const int cidx = creature.CFIND2(RowCol(PROW, PCOL));
     if (cidx == -1)
     {
         HUPDAT();
@@ -675,19 +564,8 @@ void Player::PATTK()
     }
 
     // make KLINK sound
-    Mix_PlayChannel(object.objChannel, klink, 0);
-    while (Mix_Playing(object.objChannel) == 1)
-    {
-        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-        {
-            scheduler.CLOCK();
-            if (game.AUTFLG && game.demoRestart == false)
-            {
-                return;
-            }
-        }
-        scheduler.curTime = SDL_GetTicks();
-    }
+    if (!playSound(object.objChannel, klink, true))
+        return;
 
     viewer.OUTSTI(viewer.exps);
 
@@ -703,7 +581,7 @@ void Player::PATTK()
         return;
     }
 
-    optr = creature.CCBLND[cidx].P_CCOBJ;
+    int optr = creature.CCBLND[cidx].P_CCOBJ;
     while (optr != -1)
     {
         object.OCBLND[optr].P_OCOWN = 0;
@@ -717,19 +595,8 @@ void Player::PATTK()
     viewer.PUPDAT();
 
     // do loud explosion sound
-    Mix_PlayChannel(object.objChannel, bang, 0);
-    while (Mix_Playing(object.objChannel) == 1)
-    {
-        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-        {
-            scheduler.CLOCK();
-            if (game.AUTFLG && game.demoRestart == false)
-            {
-                return;
-            }
-        }
-        scheduler.curTime = SDL_GetTicks();
-    }
+    if (!playSound(object.objChannel, bang, true))
+        return;
 
     PPOW += (creature.CCBLND[cidx].P_CCPOW >> 3);
     if ((PPOW & 0x8000) != 0)
@@ -745,13 +612,15 @@ void Player::PATTK()
         // do fade in with message
 
         // Pause so player can see scroll
-        ticks1 = SDL_GetTicks();
+        const Uint32 ticks1 = SDL_GetTicks();
+        Uint32 ticks2;
         do
         {
             ticks2 = SDL_GetTicks();
         }
         while (ticks2 < ticks1 + wizDelay);
 
+        SDL_Event event;
         while(SDL_PollEvent(&event))
         {
             ; // clear event buffer
@@ -791,6 +660,7 @@ void Player::PATTK()
         game.LEVEL = 3;
         creature.NEWLVL();
 
+        dodBYTE val, r, c;
         do
         {
             c = (rng.RANDOM() & 31);
@@ -826,10 +696,8 @@ void Player::PATTK()
     return;
 }
 
-// Determines if an attack strikes its target
 bool Player::ATTACK(int AP, int DP, int DD)
 {
-    int pidx, adjust, ret;
     int T0 = 15;
     int Dval = (DP - DD) * 4;
 
@@ -844,7 +712,8 @@ bool Player::ATTACK(int AP, int DP, int DD)
     }
     while (T0 > 0);
 
-    pidx = T0 - 3;
+    const int pidx = T0 - 3;
+    int adjust;
     if (pidx > 0)
     {
         adjust = pidx * 10;
@@ -854,144 +723,78 @@ bool Player::ATTACK(int AP, int DP, int DD)
         adjust = pidx * 25;
     }
 
-    ret = rng.RANDOM() + adjust - 127;
+    // FIXME shouldn't this calculation be done in dodBYTES?
+    const int ret = rng.RANDOM() + adjust - 127;
 
-    if (ret < 0)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    return ret >= 0;
 }
 
-// Calculates and assesses damage from a successful attack
 bool Player::DAMAGE(int AP, int AMO, int APO,
                     int DP, int DMD, int DPD, dodSHORT * DD)
 {
     int a;
 
-    a = ((AP * AMO) >> 7);
-    a = ((a * DMD) >> 7);
+    a = (AP * AMO) >> 7;
+    a = (a  * DMD) >> 7;
     *DD += (dodSHORT) a;
 
-    a = ((AP * APO) >> 7);
-    a = ((a * DPD) >> 7);
+    a = (AP * APO) >> 7;
+    a = (a  * DPD) >> 7;
     *DD += (dodSHORT) a;
 
-    if ((dodSHORT) DP > *DD)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return (dodSHORT) DP > *DD;
 }
 
-// Processes CLIMB command
 void Player::PCLIMB()
 {
-    Uint32 ticks1;
-
-    dodBYTE vres;
-    int     res;
-    dodBYTE A, B;
-    RowCol  rc;
-    dodSHORT temp;
-
-    rc.setRC(PROW, PCOL);
-    vres = dungeon.VFIND(rc);
+    const RowCol rc(PROW, PCOL);
+    const dodBYTE vres = dungeon.VFIND(rc);
     if (vres == Dungeon::VF_NULL)
     {
         parser.CMDERR();
         return;
     }
-    res = parser.PARSER(parser.DIRTAB, A, B, true);
+
+    dodBYTE A, B;
+    const int res = parser.PARSER(parser.DIRTAB, A, B, true);
     if (res <= 0)
     {
         parser.CMDERR();
         return;
     }
-    else
+
+    if (A == Parser::DIR_UP)
     {
-        if (A == Parser::DIR_UP)
+        // Climb Up
+        if (vres == Dungeon::VF_LADDER_UP ||
+                ((vres == Dungeon::VF_HOLE_UP) && creature.FRZFLG))// can only climb up pits after you win
         {
-            // Climb Up
-            if (vres == Dungeon::VF_LADDER_UP ||
-                    ((vres == Dungeon::VF_HOLE_UP) && creature.FRZFLG))// can only clumb up pits after you win
-            {
-                viewer.displayPrepare();
-                temp = viewer.display_mode;
-                viewer.display_mode = Viewer::MODE_TITLE;
-                viewer.draw_game();
-                ticks1 = SDL_GetTicks();
-                scheduler.curTime = ticks1;
-                do
-                {
-                    if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-                    {
-                        scheduler.CLOCK();
-                    }
-                    scheduler.curTime = SDL_GetTicks();
-                }
-                while (scheduler.curTime < ticks1 + viewer.prepPause);
-                viewer.display_mode = temp;
-                --game.LEVEL;
-                creature.NEWLVL();
-                game.INIVU();
-            }
-            else
-            {
-                parser.CMDERR();
-                return;
-            }
-        }
-        else if (A == Parser::DIR_DOWN)
-        {
-            // Climb Down
-            if (vres == Dungeon::VF_LADDER_DOWN || vres == Dungeon::VF_HOLE_DOWN)
-            {
-                viewer.displayPrepare();
-                temp = viewer.display_mode;
-                viewer.display_mode = Viewer::MODE_TITLE;
-                viewer.draw_game();
-                ticks1 = SDL_GetTicks();
-                scheduler.curTime = ticks1;
-                do
-                {
-                    if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-                    {
-                        scheduler.CLOCK();
-                    }
-                    scheduler.curTime = SDL_GetTicks();
-                }
-                while (scheduler.curTime < ticks1 + viewer.prepPause);
-                viewer.display_mode = temp;
-                ++game.LEVEL;
-                creature.NEWLVL();
-                game.INIVU();
-            }
-            else
-            {
-                parser.CMDERR();
-                return;
-            }
-        }
-        else
-        {
-            parser.CMDERR();
+            showPrepareScreen();
+            --game.LEVEL;
+            creature.NEWLVL();
+            game.INIVU();
             return;
         }
     }
+    else if (A == Parser::DIR_DOWN)
+    {
+        // Climb Down
+        if (vres == Dungeon::VF_LADDER_DOWN || vres == Dungeon::VF_HOLE_DOWN)
+        {
+            showPrepareScreen();
+            ++game.LEVEL;
+            creature.NEWLVL();
+            game.INIVU();
+            return;
+        }
+    }
+
+    parser.CMDERR();
 }
 
-// Processes DROP command
 void Player::PDROP()
 {
-    int res, idx;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
     {
         return;
@@ -1007,6 +810,7 @@ void Player::PDROP()
         return;
     }
 
+    int idx;
     if (res == 0)
     {
         idx = PLHAND;
@@ -1030,18 +834,15 @@ void Player::PDROP()
     viewer.PUPDAT();
 }
 
-// Processes EXAMINE command
 void Player::PEXAM()
 {
     viewer.display_mode = Viewer::MODE_EXAMINE;
     viewer.PUPDAT();
 }
 
-// Processes GET command
 void Player::PGET()
 {
-    int res, idx;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
     {
         return;
@@ -1061,6 +862,7 @@ void Player::PGET()
         return;
     }
 
+    int idx;
     bool match = false;
     object.OFINDF = 0;
     do
@@ -1105,242 +907,76 @@ void Player::PGET()
     viewer.PUPDAT();
 }
 
-// Processes INCANT command
 void Player::PINCAN()
 {
-    int     res;
     dodBYTE A, B;
-    RowCol  rc;
-    SDL_Event event;
-    Uint32 ticks1, ticks2;
-
-    res = parser.PARSER(object.ADJTAB, A, B, true);
+    const int res = parser.PARSER(object.ADJTAB, A, B, true);
     if (res <= 0)
-    {
         return;
-    }
 
     if (parser.FULFLG == 0)
-    {
         return;
-    }
 
     object.OBJTYP = A;
     object.OBJCLS = B;
 
-    if (PLHAND != -1)
+    if (PLHAND != -1 && object.OCBLND[PLHAND].obj_type == Object::OBJT_RING)
     {
-        if (object.OCBLND[PLHAND].obj_type == Object::OBJT_RING)
-        {
-            if (object.OCBLND[PLHAND].P_OCXX1 == object.OBJTYP)
-            {
-                object.OCBLND[PLHAND].obj_id = object.OBJTYP;
-                object.OCBFIL(object.OBJTYP, PLHAND);
-
-                // make ring sound
-                Mix_PlayChannel(object.objChannel,
-                                object.objSound[object.OCBLND[PLHAND].obj_type], 0);
-                while (Mix_Playing(object.objChannel) == 1)
-                {
-                    if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-                    {
-                        scheduler.CLOCK();
-                    }
-                    scheduler.curTime = SDL_GetTicks();
-                }
-
-                viewer.STATUS();
-                viewer.PUPDAT();
-                object.OCBLND[PLHAND].P_OCXX1 = -1;
-                if (object.OBJTYP == 0x12)
-                {
-                    // winner
-                    while(SDL_PollEvent(&event))
-                    {
-                        ; // clear event buffer
-                    }
-
-                    // Pause so player can see status line
-                    ticks1 = SDL_GetTicks();
-                    do
-                    {
-                        ticks2 = SDL_GetTicks();
-                    }
-                    while (ticks2 < ticks1 + wizDelay);
-
-                    viewer.clearArea(&viewer.TXTSTS);
-                    viewer.clearArea(&viewer.TXTPRI);
-                    viewer.ShowFade(Viewer::FADE_VICTORY);
-                    game.hasWon = true;
-                }
-                else
-                {
-                    return;
-                }
-            }
-        }
+        if (handleRingIncant(PLHAND))
+            return;
     }
 
-    if (PRHAND != -1)
+    if (PRHAND != -1 && object.OCBLND[PRHAND].obj_type == Object::OBJT_RING)
     {
-        if (object.OCBLND[PRHAND].obj_type == Object::OBJT_RING)
-        {
-            if (object.OCBLND[PRHAND].P_OCXX1 == object.OBJTYP)
-            {
-                object.OCBLND[PRHAND].obj_id = object.OBJTYP;
-                object.OCBFIL(object.OBJTYP, PRHAND);
-
-                // make ring sound
-                Mix_PlayChannel(object.objChannel,
-                                object.objSound[object.OCBLND[PRHAND].obj_type], 0);
-                while (Mix_Playing(object.objChannel) == 1)
-                {
-                    if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-                    {
-                        scheduler.CLOCK();
-                    }
-                    scheduler.curTime = SDL_GetTicks();
-                }
-
-                viewer.STATUS();
-                viewer.PUPDAT();
-                object.OCBLND[PRHAND].P_OCXX1 = -1;
-                if (object.OBJTYP == 0x12)
-                {
-                    // Do winner
-                    while(SDL_PollEvent(&event))
-                    {
-                        ; // clear event buffer
-                    }
-
-                    // Pause so player can see status line
-                    ticks1 = SDL_GetTicks();
-                    do
-                    {
-                        ticks2 = SDL_GetTicks();
-                    }
-                    while (ticks2 < ticks1 + wizDelay);
-
-                    viewer.clearArea(&viewer.TXTSTS);
-                    viewer.clearArea(&viewer.TXTPRI);
-                    viewer.ShowFade(Viewer::FADE_VICTORY);
-                    game.hasWon = true;
-                }
-                else
-                {
-                    return;
-                }
-            }
-        }
+        if (handleRingIncant(PRHAND))
+            return;
     }
 }
 
-// Processes LOOK command
 void Player::PLOOK()
 {
     viewer.display_mode = Viewer::MODE_3D;
     viewer.PUPDAT();
 }
 
-// Processes MOVE command
 void Player::PMOVE()
 {
-    int     res;
     dodBYTE A, B;
-    Uint32 ticks1;
-
-    res = parser.PARSER(parser.DIRTAB, A, B, true);
+    const int res = parser.PARSER(parser.DIRTAB, A, B, true);
     if (res < 0)
     {
         parser.CMDERR();
-        return;
     }
     else if (res == 0)
     {
         // Move Forward
         --viewer.HLFSTP;
         viewer.PUPDAT();
-        ticks1 = SDL_GetTicks();
-        scheduler.curTime = ticks1;
-        do
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-                if (game.AUTFLG && game.demoRestart == false)
-                {
-                    return;
-                }
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
-        while (scheduler.curTime < ticks1 + (moveDelay / 2));
+        if (!delayBy(moveDelay / 2))
+            return;
+
         viewer.HLFSTP = 0;
         PSTEP(0);
-        PDAM += (POBJWT >> 3) + 3;
+        PDAM += (POBJWT / 8) + 3;
         HUPDAT();
         --viewer.UPDATE;
         viewer.draw_game();
-        ticks1 = SDL_GetTicks();
-        scheduler.curTime = ticks1;
-        do
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-                if (game.AUTFLG && game.demoRestart == false)
-                {
-                    return;
-                }
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
-        while (scheduler.curTime < ticks1 + (moveDelay / 2));
-        return;
+        delayBy(moveDelay / 2);
     }
     else if (A == Parser::DIR_BACK)
     {
         // Move Back
         --viewer.BAKSTP;
         viewer.PUPDAT();
-        ticks1 = SDL_GetTicks();
-        scheduler.curTime = ticks1;
-        do
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-                if (game.AUTFLG && game.demoRestart == false)
-                {
-                    return;
-                }
-
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
-        while (scheduler.curTime < ticks1 + (moveDelay / 2));
+        if (!delayBy(moveDelay / 2))
+            return;
         viewer.BAKSTP = 0;
         PSTEP(2);
         PDAM += (POBJWT / 8) + 3;
         HUPDAT();
         --viewer.UPDATE;
         viewer.draw_game();
-        ticks1 = SDL_GetTicks();
-        scheduler.curTime = ticks1;
-        do
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-                if (game.AUTFLG && game.demoRestart == false)
-                {
-                    return;
-                }
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
-        while (scheduler.curTime < ticks1 + (moveDelay / 2));
-        return;
+        delayBy(moveDelay / 2);
     }
     else if (A == Parser::DIR_RIGHT)
     {
@@ -1356,7 +992,6 @@ void Player::PMOVE()
         HUPDAT();
         --viewer.UPDATE;
         viewer.draw_game();
-        return;
     }
     else if (A == Parser::DIR_LEFT)
     {
@@ -1372,16 +1007,13 @@ void Player::PMOVE()
         HUPDAT();
         --viewer.UPDATE;
         viewer.draw_game();
-        return;
     }
     else
     {
         parser.CMDERR();
-        return;
     }
 }
 
-// Processes PULL command
 void Player::PPULL()
 {
     if (BAGPTR == -1)
@@ -1390,8 +1022,7 @@ void Player::PPULL()
         return;
     }
 
-    int res;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
     {
         return;
@@ -1484,32 +1115,21 @@ void Player::PPULL()
     viewer.PUPDAT();
 }
 
-// Processes REVEAL command
 void Player::PREVEA()
 {
-    int res, idx, req;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
-    {
         return;
-    }
+
     if (res == 0 && PLHAND == -1)
-    {
         return;
-    }
+
     if (res == 1 && PRHAND == -1)
-    {
         return;
-    }
-    if (res == 0)
-    {
-        idx = PLHAND;
-    }
-    else
-    {
-        idx = PRHAND;
-    }
-    req = object.OCBLND[idx].obj_reveal_lvl;
+
+    const int idx = res == 0 ? PLHAND : PRHAND;
+
+    const int req = object.OCBLND[idx].obj_reveal_lvl;
     if (req && ((req * 25 <= PPOW) || (g_cheats & CHEAT_REVEAL) || (req == 50 && game.VisionScroll && 400 <= PPOW)))
     {
         object.OCBFIL(object.OCBLND[idx].obj_id, idx);
@@ -1518,15 +1138,12 @@ void Player::PREVEA()
     }
 }
 
-// Processes STOW command
 void Player::PSTOW()
 {
-    int res;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
-    {
         return;
-    }
+
     if (res == 0 && PLHAND == -1)
     {
         parser.CMDERR();
@@ -1554,13 +1171,10 @@ void Player::PSTOW()
     viewer.PUPDAT();
 }
 
-// Processes TURN command
 void Player::PTURN()
 {
-    int     res;
     dodBYTE A, B;
-
-    res = parser.PARSER(parser.DIRTAB, A, B, true);
+    const int res = parser.PARSER(parser.DIRTAB, A, B, true);
     if (res != 1)
     {
         parser.CMDERR();
@@ -1612,18 +1226,14 @@ void Player::PTURN()
     }
 }
 
-// Turning Animation
 void Player::ShowTurn(dodBYTE A)
 {
-    int ctr, times, x;
-    int offset, dir;
-    int inc = 32;
-    int lines = 8;
-    int y0 = 17;
-    int y1 = 135;
-    Uint32 ticks1;
-    bool redraw = true;
+    const int inc = 32;
+    const int lines = 8;
+    const int y0 = 17;
+    const int y1 = 135;
 
+    int times, offset, dir;
     switch (A)
     {
     case Parser::DIR_LEFT:
@@ -1652,12 +1262,14 @@ void Player::ShowTurn(dodBYTE A)
     viewer.RANGE = 0;
     viewer.SETFAD();
     glColor3fv(viewer.fgColor);
+
+    bool redraw = true;
     turning = true;
-    for (ctr = 0; ctr < times; ++ctr)
+    for (int ctr = 0; ctr < times; ++ctr)
     {
-        for (x = 0; x < lines; ++x)
+        for (int x = 0; x < lines; ++x)
         {
-            ticks1 = SDL_GetTicks();
+            const Uint32 ticks1 = SDL_GetTicks();
             do
             {
                 scheduler.curTime = SDL_GetTicks();
@@ -1691,31 +1303,17 @@ void Player::ShowTurn(dodBYTE A)
     --HEARTF;
 }
 
-// Processes USE command
 void Player::PUSE()
 {
-    int res, idx;
-    res = parser.PARHND();
+    const int res = parser.PARHND();
     if (res == -1)
-    {
         return;
-    }
     if (res == 0 && PLHAND == -1)
-    {
         return;
-    }
     if (res == 1 && PRHAND == -1)
-    {
         return;
-    }
-    if (res == 0)
-    {
-        idx = PLHAND;
-    }
-    else
-    {
-        idx = PRHAND;
-    }
+
+    const int idx = res == 0 ? PLHAND : PRHAND;
 
     if (object.OCBLND[idx].obj_type  == Object::OBJT_TORCH)
     {
@@ -1736,19 +1334,9 @@ void Player::PUSE()
         viewer.PUPDAT();
 
         // make torch sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         viewer.PUPDAT();
-        return;
     }
     else if (object.OCBLND[idx].obj_id  == Object::OBJ_FLASK_THEWS)
     {
@@ -1757,16 +1345,7 @@ void Player::PUSE()
         object.OCBLND[idx].obj_reveal_lvl = 0;
 
         // make flask sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         viewer.STATUS();
         HUPDAT();
@@ -1778,16 +1357,7 @@ void Player::PUSE()
         object.OCBLND[idx].obj_reveal_lvl = 0;
 
         // make flask sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         viewer.STATUS();
         HUPDAT();
@@ -1801,16 +1371,7 @@ void Player::PUSE()
         object.OCBLND[idx].obj_reveal_lvl = 0;
 
         // make flask sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         viewer.STATUS();
         HUPDAT();
@@ -1824,21 +1385,11 @@ void Player::PUSE()
         }
 
         // make scroll sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         HEARTF = 0;
         viewer.display_mode = Viewer::MODE_MAP;
         viewer.PUPDAT();
-        return;
     }
     else if (object.OCBLND[idx].obj_id  == Object::OBJ_SCROLL_VISION)
     {
@@ -1849,26 +1400,14 @@ void Player::PUSE()
         }
 
         // make scroll sound
-        Mix_PlayChannel(object.objChannel,
-                        object.objSound[object.OCBLND[idx].obj_type], 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
+        playSound(object.objChannel, object.objSound[object.OCBLND[idx].obj_type]);
 
         HEARTF = 0;
         viewer.display_mode = Viewer::MODE_MAP;
         viewer.PUPDAT();
-        return;
     }
 }
 
-// Processes ZLOAD command
-// actual load happens in Scheduler::LOAD()
 void Player::PZLOAD()
 {
     oslink.buildSaveGamePath();
@@ -1877,7 +1416,6 @@ void Player::PZLOAD()
     --scheduler.ZFLAG;
 }
 
-// Processes ZSAVE command
 void Player::PZSAVE()
 {
     oslink.buildSaveGamePath();
@@ -1886,32 +1424,117 @@ void Player::PZSAVE()
     ++scheduler.ZFLAG;
 }
 
-// Attempts to move player in given direction
 bool Player::PSTEP(dodBYTE dir)
 {
-    dodBYTE B;
-    B = dir + PDIR;
+    dodBYTE B = dir + PDIR;
     B &= 3;
     if (dungeon.STEPOK(PROW, PCOL, B))
     {
         PROW += dungeon.STPTAB[B * 2];
-        PCOL += dungeon.STPTAB[(B * 2) + 1];
+        PCOL += dungeon.STPTAB[B * 2 + 1];
         return true;
     }
     else
     {
         // do thud sound
-        Mix_PlayChannel(object.objChannel, thud, 0);
-        while (Mix_Playing(object.objChannel) == 1)
-        {
-            if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
-            {
-                scheduler.CLOCK();
-            }
-            scheduler.curTime = SDL_GetTicks();
-        }
-
+        playSound(object.objChannel, thud);
         return false;
     }
 }
 
+void Player::showPrepareScreen() const
+{
+    viewer.displayPrepare();
+    const dodSHORT temp = viewer.display_mode;
+    viewer.display_mode = Viewer::MODE_TITLE;
+    viewer.draw_game();
+    const Uint32 ticks1 = SDL_GetTicks();
+    scheduler.curTime = ticks1;
+    do
+    {
+        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
+        {
+            scheduler.CLOCK();
+        }
+        scheduler.curTime = SDL_GetTicks();
+    }
+    while (scheduler.curTime < ticks1 + viewer.prepPause);
+    viewer.display_mode = temp;
+}
+
+bool Player::handleRingIncant(int hand) const
+{
+    if (object.OCBLND[hand].P_OCXX1 != object.OBJTYP)
+        return false;
+
+    object.OCBLND[hand].obj_id = object.OBJTYP;
+    object.OCBFIL(object.OBJTYP, hand);
+
+    // make ring sound
+    playSound(object.objChannel, object.objSound[object.OCBLND[hand].obj_type]);
+
+    viewer.STATUS();
+    viewer.PUPDAT();
+    object.OCBLND[hand].P_OCXX1 = -1;
+    if (object.OBJTYP == Object::OBJ_RING_FINAL)
+    {
+        // winner
+        SDL_Event event;
+        while(SDL_PollEvent(&event))
+            ; // clear event buffer
+
+        // Pause so player can see status line
+        const Uint32 ticks1 = SDL_GetTicks();
+        Uint32 ticks2;
+        do
+        {
+            ticks2 = SDL_GetTicks();
+        }
+        while (ticks2 < ticks1 + wizDelay);
+
+        viewer.clearArea(&viewer.TXTSTS);
+        viewer.clearArea(&viewer.TXTPRI);
+        viewer.ShowFade(Viewer::FADE_VICTORY);
+        game.hasWon = true;
+    }
+    else
+        return true;
+
+    return false;
+}
+
+bool Player::delayBy(Uint32 duration) const
+{
+    const Uint32 ticks1 = SDL_GetTicks();
+    scheduler.curTime = ticks1;
+    do
+    {
+        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
+        {
+            scheduler.CLOCK();
+            if (game.AUTFLG && game.demoRestart == false)
+                return false;
+        }
+        scheduler.curTime = SDL_GetTicks();
+    }
+    while (scheduler.curTime < ticks1 + duration);
+
+    return true;
+}
+
+bool Player::playSound(int channel, Mix_Chunk* chunk, bool checkForDemoAbort) const
+{
+    Mix_PlayChannel(channel, chunk, 0);
+    while (Mix_Playing(channel) == 1)
+    {
+        if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
+        {
+            scheduler.CLOCK();
+            if (checkForDemoAbort && game.AUTFLG && game.demoRestart == false)
+                return false;
+        }
+        scheduler.curTime = SDL_GetTicks();
+    }
+
+    return true;
+}
