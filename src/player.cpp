@@ -857,14 +857,17 @@ void Player::PGET()
         parser.CMDERR();
         return;
     }
-    if ( !object.PAROBJ() )
+
+    dodBYTE objclass, objtype;
+    bool is_specific;
+    if (!object.PAROBJ(objclass, objtype, is_specific))
     {
         return;
     }
 
     int idx;
     bool match = false;
-    object.OFINDF = 0;
+    object.resetFindPointer();
     do
     {
         idx = object.OFIND(RowCol(PROW, PCOL));
@@ -873,16 +876,16 @@ void Player::PGET()
             parser.CMDERR();
             return;
         }
-        if (object.SPEFLG == 0)
+        if (!is_specific)
         {
-            if (object.OBJCLS == object.OCBLND[idx].obj_type)
+            if (objclass == object.OCBLND[idx].obj_type)
             {
                 match = true;
             }
         }
         else
         {
-            if (object.OBJTYP == object.OCBLND[idx].obj_id)
+            if (objtype == object.OCBLND[idx].obj_id)
             {
                 match = true;
             }
@@ -909,26 +912,23 @@ void Player::PGET()
 
 void Player::PINCAN()
 {
-    dodBYTE A, B;
-    const int res = parser.PARSER(object.ADJTAB, A, B, true);
+    dodBYTE objtype, objclass;
+    const int res = parser.PARSER(object.ADJTAB, objtype, objclass, true);
     if (res <= 0)
         return;
 
     if (parser.FULFLG == 0)
         return;
 
-    object.OBJTYP = A;
-    object.OBJCLS = B;
-
     if (PLHAND != -1 && object.OCBLND[PLHAND].obj_type == Object::OBJT_RING)
     {
-        if (handleRingIncant(PLHAND))
+        if (handleRingIncant(PLHAND, objtype))
             return;
     }
 
     if (PRHAND != -1 && object.OCBLND[PRHAND].obj_type == Object::OBJT_RING)
     {
-        if (handleRingIncant(PRHAND))
+        if (handleRingIncant(PRHAND, objtype))
             return;
     }
 }
@@ -1037,10 +1037,11 @@ void Player::PPULL()
         parser.CMDERR();
         return;
     }
-    if ( !object.PAROBJ() )
-    {
+
+    dodBYTE objclass, objtype;
+    bool is_specific;
+    if (!object.PAROBJ(objclass, objtype, is_specific))
         return;
-    }
 
     bool onHead = true;
     bool match = false;
@@ -1063,16 +1064,16 @@ void Player::PPULL()
             }
         }
 
-        if (object.SPEFLG == 0)
+        if (!is_specific)
         {
-            if (object.OCBLND[curPtr].obj_type == object.OBJCLS)
+            if (object.OCBLND[curPtr].obj_type == objclass)
             {
                 match = true;
             }
         }
         else
         {
-            if (object.OCBLND[curPtr].obj_id == object.OBJTYP)
+            if (object.OCBLND[curPtr].obj_id == objtype)
             {
                 match = true;
             }
@@ -1462,13 +1463,13 @@ void Player::showPrepareScreen() const
     viewer.display_mode = temp;
 }
 
-bool Player::handleRingIncant(int hand) const
+bool Player::handleRingIncant(int hand, dodBYTE objtype) const
 {
-    if (object.OCBLND[hand].P_OCXX1 != object.OBJTYP)
+    if (object.OCBLND[hand].P_OCXX1 != objtype)
         return false;
 
-    object.OCBLND[hand].obj_id = object.OBJTYP;
-    object.OCBFIL(object.OBJTYP, hand);
+    object.OCBLND[hand].obj_id = objtype;
+    object.OCBFIL(objtype, hand);
 
     // make ring sound
     playSound(object.objChannel, object.objSound[object.OCBLND[hand].obj_type]);
@@ -1476,7 +1477,7 @@ bool Player::handleRingIncant(int hand) const
     viewer.STATUS();
     viewer.PUPDAT();
     object.OCBLND[hand].P_OCXX1 = -1;
-    if (object.OBJTYP == Object::OBJ_RING_FINAL)
+    if (objtype == Object::OBJ_RING_FINAL)
     {
         // winner
         SDL_Event event;

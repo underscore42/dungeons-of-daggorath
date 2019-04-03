@@ -115,7 +115,7 @@ void Creature::NEWLVL()
     }
 
     int u = -1;
-    object.OFINDF = 0;
+    object.resetFindPointer();
     for (;;)
     {
         const int idx = object.FNDOBJ();
@@ -293,7 +293,7 @@ int Creature::CMOVE(int task, int cidx)
         )
     )
     {
-        object.OFINDF = 0;
+        object.resetFindPointer();
         const int oidx = object.OFIND(RowCol(CCBLND[cidx].P_CCROW,
                                              CCBLND[cidx].P_CCCOL));
         if (oidx != -1)

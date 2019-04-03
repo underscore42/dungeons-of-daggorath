@@ -1241,7 +1241,7 @@ void Viewer::VIEWER()
         }
 
         // Draw Objects
-        object.OFINDF = 0;
+        object.resetFindPointer();
         for (;;)
         {
             const int objIdx = object.OFIND(dungeon.DROW);
@@ -1349,7 +1349,7 @@ void Viewer::EXAMIN()
 
     // check for objects on floor
     int idx;
-    object.OFINDF = 0;
+    object.resetFindPointer();
     do
     {
         idx = object.OFIND(RowCol(player.PROW, player.PCOL));
@@ -1591,7 +1591,7 @@ void Viewer::MAPPER()
     if (showSeerMap == true)
     {
         // Mark Objects
-        object.OFINDF = 0;
+        object.resetFindPointer();
         for (;;)
         {
             const int objIdx = object.FNDOBJ();

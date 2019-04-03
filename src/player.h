@@ -198,7 +198,7 @@ private:
     void showPrepareScreen() const;
 
     // Returns true if the game was not won by incanting the current ring.
-    bool handleRingIncant(int hand) const;
+    bool handleRingIncant(int hand, dodBYTE objtype) const;
 
     // Delays with an interruptible loop for duration milliseconds.
     // Returns false if loop was interrupted.

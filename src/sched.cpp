@@ -623,7 +623,8 @@ void Scheduler::SAVE()
         fout << outstr << endl;
     }
 
-    sprintf(outstr, "%d", object.OFINDF);
+    const int OFINDF = 0;
+    sprintf(outstr, "%d", OFINDF);
     fout << outstr << endl;
     sprintf(outstr, "%d", object.OCBPTR);
     fout << outstr << endl;
@@ -821,8 +822,9 @@ void Scheduler::LOAD()
         if (1 == sscanf(instr, "%d", &in)) creature.CCBLND[ctr].P_CCCOL = in;
     }
 
+    int OFINDF;
     fin >> instr;
-    if (1 == sscanf(instr, "%d", &in)) object.OFINDF = in;
+    if (1 == sscanf(instr, "%d", &in)) OFINDF = in;
     fin >> instr;
     if (1 == sscanf(instr, "%d", &in)) object.OCBPTR = in;
     fin >> instr;
