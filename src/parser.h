@@ -43,7 +43,7 @@ public:
 
     // Gets and classifies the next token
     // A = TYPE, B = CLASS
-    int PARSER(dodBYTE * X, dodBYTE &A, dodBYTE &B, bool norm);
+    int PARSER(const dodBYTE * X, dodBYTE &A, dodBYTE &B, bool norm);
 
     // Prints ???
     void CMDERR() const;

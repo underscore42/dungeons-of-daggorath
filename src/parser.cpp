@@ -104,7 +104,7 @@ dodBYTE Parser::KBDGET()
     return c;
 }
 
-int Parser::PARSER(dodBYTE * pTABLE, dodBYTE & A, dodBYTE & B, bool norm)
+int Parser::PARSER(const dodBYTE * pTABLE, dodBYTE & A, dodBYTE & B, bool norm)
 {
     int     U, Xup, Y;
     dodBYTE retA, retB;
@@ -237,7 +237,8 @@ void Parser::EXPAND(const dodBYTE* src, int* src_offset, dodBYTE* dst)
 
     const dodBYTE* const src_beg = src;
 
-    // first 5 bits contain the length of the expanded string minus one
+    // first 5 bits contain the length of the expanded string. add one for the
+    // string termination character.
     const unsigned total_len = (*src >> 3) + 1;
 
     unsigned offset = 1; // at which 5 bit char are we
