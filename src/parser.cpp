@@ -19,44 +19,9 @@ is held by Douglas J. Morgan.
 
 extern Viewer viewer;
 
-// Constructor
-Parser::Parser() : LINPTR(0),
-    PARFLG(0),
-    PARCNT(0),
-    FULFLG(0),
-    KBDHDR(0),
-    KBDTAL(0),
-    LINEND(0),
-    TOKEND(0)
+Parser::Parser()
 {
-    int ctr;
-    for (ctr = 0; ctr < 33; ++ctr)
-    {
-        KBDBUF[ctr] = 0;
-        LINBUF[ctr] = 0;
-        TOKEN[ctr] = 0;
-        OBJSTR[ctr] = 0;
-        STRING[ctr] = 0;
-    }
-    STRING[33] = 0;
-    STRING[34] = 0;
-
-    M_PROM1[0] = I_CR;
-    M_PROM1[1] = I_DOT;
-    M_PROM1[2] = I_BAR;
-    M_PROM1[3] = I_BS;
-    M_PROM1[4] = I_NULL;
-
-    M_CURS[0] = I_BAR;
-    M_CURS[1] = I_BS;
-    M_CURS[2] = I_NULL;
-
-    M_ERAS[0] = I_SP;
-    M_ERAS[1] = I_BS;
-    M_ERAS[2] = I_BS;
-    M_ERAS[3] = I_BAR;
-    M_ERAS[4] = I_BS;
-    M_ERAS[5] = I_NULL;
+    Reset();
 
     Utils::LoadFromHex(CERR, "177BD0");
     Utils::LoadFromHex(CMDTAB, "0F30034A046B2806C4B440200927C0380B80B52E28180E5A003012E185D42018F7AC201AFB142021563030245B142C202747DC20295938182B32802834C78480283530D8A0");
@@ -66,24 +31,15 @@ Parser::Parser() : LINPTR(0),
 void Parser::Reset()
 {
     LINPTR = 0;
-    PARFLG = 0;
-    PARCNT = 0;
     FULFLG = 0;
     KBDHDR = 0;
     KBDTAL = 0;
-    LINEND = 0;
-    TOKEND = 0;
-    int ctr;
-    for (ctr = 0; ctr < 33; ++ctr)
-    {
-        KBDBUF[ctr] = 0;
-        LINBUF[ctr] = 0;
-        TOKEN[ctr] = 0;
-        OBJSTR[ctr] = 0;
-        STRING[ctr] = 0;
-    }
-    STRING[33] = 0;
-    STRING[34] = 0;
+
+    memset(KBDBUF, 0, sizeof(KBDBUF));
+    memset(LINBUF, 0, sizeof(LINBUF));
+    memset(TOKEN,  0, sizeof(TOKEN ));
+    memset(OBJSTR, 0, sizeof(OBJSTR));
+    memset(STRING, 0, sizeof(STRING));
 }
 
 void Parser::KBDPUT(dodBYTE c)
@@ -106,125 +62,104 @@ dodBYTE Parser::KBDGET()
 
 int Parser::PARSER(const dodBYTE * pTABLE, dodBYTE & A, dodBYTE & B, bool norm)
 {
-    int     U, Xup, Y;
-    dodBYTE retA, retB;
-
+    A = 0;
     if (norm)
     {
-        A = 0;
         B = 0;
         if (!GETTOK())
-        {
             return 0;
-        }
-    }
-    else
-    {
-        A = 0;
     }
 
-    PARFLG = 0;
-    FULFLG = 0;
-    B = *pTABLE;
+    dodBYTE retA, retB;
+
+    const dodBYTE num_words = *pTABLE;
     ++pTABLE;
-    PARCNT = B;
 
-PARS10:
-    U = 0;
-    EXPAND(pTABLE, &Xup, 0);
-    pTABLE += Xup;
-    Y = 2;
+    FULFLG = 0;
+    dodBYTE num_matches = 0;
+    for (A = 0; A < num_words; ++A) // loop through all words in pTABLE
+    {
+        int Xup;
+        EXPAND(pTABLE, &Xup, 0);
+        pTABLE += Xup;
 
-PARS12:
-    B = TOKEN[U++];
-    if (B == 0xFF)
-    {
-        goto PARS20;
-    }
-    if (B != STRING[Y++])
-    {
-        goto PARS30;
-    }
-    if (STRING[Y] != I_NULL && STRING[Y] != 0)
-    {
-        goto PARS12;
-    }
-    if (TOKEN[U] != 0xFF && TOKEN[U] != 0)
-    {
-        goto PARS30;
-    }
-    --FULFLG;
+        // compare TOKEN against word
+        for (unsigned U = 0, Y = 2;;)
+        {
+            B = TOKEN[U];
 
-PARS20:
-    if (PARFLG != 0)
-    {
-        goto PARS90;
-    }
-    ++PARFLG;
-    B = STRING[1];
-    retA = A;
-    retB = B;
+            const bool end_of_token = B == 0xFF;
+            const bool end_of_word  = STRING[Y] == 0 || STRING[Y] == I_NULL;
+            const bool match        = end_of_token
+                                    ? end_of_word
+                                    : B == STRING[Y];
 
-PARS30:
-    ++A;
-    --PARCNT;
-    if (PARCNT != 0)
-    {
-        goto PARS10;
+            if (!match && !end_of_token)
+                break;
+
+            if (!end_of_token)
+                ++U;
+
+            if (!end_of_word)
+                ++Y;
+
+            if (end_of_token)
+            {
+                // if we get here we have at least a partial match
+                // for example 'L' does match the 'LOOK' command
+                ++num_matches;
+                retA = A;
+                retB = STRING[1];
+                // check if this is actually a full match
+                if (end_of_word)
+                    --FULFLG;
+
+                break;
+            }
+        }
+
+        // if we find another successful match it means the input is ambiguous
+        if (num_matches > 1)
+            break;
     }
 
-    if (PARFLG != 0)
+    if (num_matches == 1)
     {
         A = retA;
         B = retB;
         return 1;
     }
-
-PARS90:
-    A = 0xFF;
-    B = 0xFF;
-    return -1;
+    else
+    {
+        A = 0xFF;
+        B = 0xFF;
+        return -1;
+    }
 }
 
 bool Parser::GETTOK()
 {
-    int     U = 0;
-    int     X = LINPTR;
-    dodBYTE A;
+    unsigned X = LINPTR;
 
-    do
-    {
-        A = LINBUF[X++];
-    }
-    while (A == 0);
-    goto GTOK22;
+    // skip leading spaces
+    while (LINBUF[X] == 0)
+        ++X;
 
-GTOK20:
-    A = LINBUF[X++];
+    unsigned U = 0;
+    for (; U < 32 - X; ++U)
+    {
+        const dodBYTE A = LINBUF[X++];
 
-GTOK22:
-    if (A == 0 || A == 0xFF)
-    {
-        goto GTOK30;
-    }
-    TOKEN[U++] = A;
-    if (U < 32)
-    {
-        goto GTOK20;
+        if (A == 0 || A == 0xFF)
+            break;
+
+        TOKEN[U] = A;
     }
 
-GTOK30:
-    TOKEN[U++] = 0xFF;
+    TOKEN[U] = 0xFF;
     LINPTR = X;
 
-    if (TOKEN[0] == 0xFF)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    return TOKEN[0] != 0xFF;
 }
 
 void Parser::EXPAND(const dodBYTE* src, int* src_offset, dodBYTE* dst)
@@ -301,10 +236,9 @@ void Parser::CMDERR() const
 
 int Parser::PARHND()
 {
-    int     res;
     dodBYTE A, B;
 
-    res = PARSER(DIRTAB, A, B, true);
+    const int res = PARSER(DIRTAB, A, B, true);
     if (res != 1)
     {
         CMDERR();

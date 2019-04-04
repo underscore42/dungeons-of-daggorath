@@ -53,22 +53,25 @@ public:
 
     static constexpr size_t MAX_TOKENLEN = 33;
 
-    // Public Data Member
-    dodSHORT    LINPTR;
-    dodBYTE     PARFLG;
-    dodBYTE     PARCNT;
-    dodBYTE     FULFLG;
-    dodBYTE     KBDHDR;
-    dodBYTE     KBDTAL;
-    dodBYTE     KBDBUF[33];
-    dodBYTE     LINBUF[33];
-    dodSHORT    LINEND;
-    dodBYTE     TOKEN[MAX_TOKENLEN];
-    dodBYTE     TOKEND;
-    dodBYTE     STRING[35];
-    dodBYTE     OBJSTR[33];
-    dodBYTE     CMDTAB[69];
-    dodBYTE     DIRTAB[26];
+    // Pointer into LINBUF
+    dodSHORT LINPTR;
+
+    // if we found a full match instead of a partial match in PARSER()
+    dodBYTE FULFLG;
+
+    // Read pointer into KBDBUF
+    dodBYTE KBDHDR;
+
+    // Write pointer into KBDBUF
+    dodBYTE KBDTAL;
+
+    dodBYTE KBDBUF[33];
+    dodBYTE LINBUF[33];
+    dodBYTE TOKEN[MAX_TOKENLEN];
+    dodBYTE STRING[35];
+    dodBYTE OBJSTR[33];
+    dodBYTE CMDTAB[69];
+    dodBYTE DIRTAB[26];
 
     enum
     {
@@ -113,9 +116,16 @@ public:
         DIR_DOWN,
     };
 
-    dodBYTE M_PROM1[5];
-    dodBYTE M_CURS[3];
-    dodBYTE M_ERAS[6];
+    // The prompt '._'
+    static constexpr dodBYTE M_PROM1[5] = {I_CR, I_DOT, I_BAR, I_BS, I_NULL};
+
+    // The cursor '_'
+    static constexpr dodBYTE M_CURS[3] = {I_BAR, I_BS, I_NULL};
+
+    // Used when player presses backspace
+    static constexpr dodBYTE M_ERAS[6] = {I_SP, I_BS, I_BS, I_BAR, I_BS, I_NULL};
+
+    // The three ? that get printed to indicate an input error
     dodBYTE CERR[3];
 };
 
