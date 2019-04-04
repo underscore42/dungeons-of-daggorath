@@ -69,7 +69,6 @@ public:
     dodBYTE LINBUF[33];
     dodBYTE TOKEN[MAX_TOKENLEN];
     dodBYTE STRING[35];
-    dodBYTE OBJSTR[33];
     dodBYTE CMDTAB[69];
     dodBYTE DIRTAB[26];
 

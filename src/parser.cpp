@@ -38,7 +38,6 @@ void Parser::Reset()
     memset(KBDBUF, 0, sizeof(KBDBUF));
     memset(LINBUF, 0, sizeof(LINBUF));
     memset(TOKEN,  0, sizeof(TOKEN ));
-    memset(OBJSTR, 0, sizeof(OBJSTR));
     memset(STRING, 0, sizeof(STRING));
 }
 
