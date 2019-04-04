@@ -203,20 +203,33 @@ public:
         P_CCCOL = 0;
     }
 
-    // Fields
+    // Power
     dodSHORT    P_CCPOW;
+    // Magic Offense
     dodBYTE     P_CCMGO;
+    // Magic defense
     dodBYTE     P_CCMGD;
+    // Physical offense
     dodBYTE     P_CCPHO;
+    // Physical defense
     dodBYTE     P_CCPHD;
+    // Movement delay
     int         P_CCTMV;
+    // Attack delay
     int         P_CCTAT;
+    // Object list pointer
     int         P_CCOBJ;
+    // Damage: If damage >= power then the creature is dead
     dodSHORT    P_CCDAM;
+    // In-Use flag (0=not in use, 255=in use)
     dodBYTE     P_CCUSE;
+    // Creature type
     dodBYTE     creature_id;
+    // Direction in which creature is facing
     dodBYTE     P_CCDIR;
+    // Creature row position
     dodBYTE     P_CCROW;
+    // Creature column position
     dodBYTE     P_CCCOL;
 };
 
@@ -277,20 +290,30 @@ public:
         P_OCPHO = 0;
     }
 
-    // Fields
-    int         P_OCPTR;
-    dodBYTE     P_OCROW;
-    dodBYTE     P_OCCOL;
-    dodBYTE     P_OCLVL;
-    dodBYTE     P_OCOWN;
-    dodSHORT    P_OCXX0;
-    dodSHORT    P_OCXX1;
-    dodSHORT    P_OCXX2;
-    dodBYTE     obj_id;
-    dodBYTE     obj_type;
-    dodBYTE     obj_reveal_lvl;
-    dodBYTE     P_OCMGO;
-    dodBYTE     P_OCPHO;
+    // Linked list pointer
+    int P_OCPTR;
+    // Row
+    dodBYTE P_OCROW;
+    // Column
+    dodBYTE P_OCCOL;
+    // Level
+    dodBYTE P_OCLVL;
+    // Ownership
+    dodBYTE P_OCOWN;
+    // Temp bytes
+    dodSHORT P_OCXX0;
+    dodSHORT P_OCXX1;
+    dodSHORT P_OCXX2;
+    // Object type
+    dodBYTE obj_id;
+    // Object class
+    dodBYTE obj_type;
+    // revelation power requirement
+    dodBYTE obj_reveal_lvl;
+    // magic offense
+    dodBYTE P_OCMGO;
+    // physical offense
+    dodBYTE P_OCPHO;
 };
 
 // Object definition block
@@ -307,11 +330,14 @@ public:
         : P_ODCLS(0), P_ODREV(0), P_ODMGO(0), P_ODPHO(0)
     {}
 
-    // Fields
-    dodBYTE     P_ODCLS;
-    dodBYTE     P_ODREV;
-    dodBYTE     P_ODMGO;
-    dodBYTE     P_ODPHO;
+    // object class
+    dodBYTE P_ODCLS;
+    // revelation power requirement
+    dodBYTE P_ODREV;
+    // magic offense
+    dodBYTE P_ODMGO;
+    // physical offense
+    dodBYTE P_ODPHO;
 };
 
 // Extra definition block
