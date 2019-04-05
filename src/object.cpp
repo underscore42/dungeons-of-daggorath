@@ -17,9 +17,7 @@ is held by Douglas J. Morgan.
 #include "object.h"
 #include "dodgame.h"
 #include "parser.h"
-#include "oslink.h"
 
-extern OS_Link  oslink;
 extern Parser   parser;
 extern dodGame  game;
 
