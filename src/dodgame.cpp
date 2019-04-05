@@ -79,6 +79,21 @@ void dodGame::COMINI()
     viewer.VXSCALf = 128.0f;
     viewer.VYSCALf = 128.0f;
     AUTFLG = viewer.ShowFade(Viewer::FADE_BEGIN);
+    IsDemo = AUTFLG;
+    if (IsDemo)
+    {
+        LEVEL = 2;
+        dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
+    }
+    else
+    {
+        LEVEL = 0;
+        if (!RandomMaze)
+            dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
+        else
+            dungeon.SetLEVTABRandomMap();  //Sets random seeds for maze.
+    }
+
     player.setInitialObjects(AUTFLG);
     viewer.displayPrepare();
     viewer.display_mode = Viewer::MODE_TITLE;

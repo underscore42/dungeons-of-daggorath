@@ -153,7 +153,6 @@ void OS_Link::init()
                 {
                     // Restart demo
                     game.hasWon = false;
-                    game.DEMOPTR = 0;
                     object.Reset();
                     creature.Reset();
                     parser.Reset();
