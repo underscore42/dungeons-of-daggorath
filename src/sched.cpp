@@ -24,7 +24,6 @@ using namespace std;
 #include "viewer.h"
 #include "oslink.h"
 #include "creature.h"
-#include "parser.h"
 #include "dodgame.h"
 #include "dungeon.h"
 #include "object.h"
@@ -33,7 +32,6 @@ extern Object   object;
 extern RNG      rng;
 extern Dungeon  dungeon;
 extern dodGame  game;
-extern Parser   parser;
 extern Creature creature;
 extern Player   player;
 extern Viewer   viewer;
