@@ -422,13 +422,8 @@ void Player::setInitialObjects(bool isDemo)
 {
     int x, y;
 
-    game.IsDemo = isDemo;
     if (isDemo)
     {
-        game.LEVEL = 2;
-        dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
-        // demo: iron sword, pine torch, leather shield
-
         x = object.OBIRTH(Object::OBJ_SWORD_IRON, 0);
         ++object.OCBLND[x].P_OCOWN;
         object.OCBFIL(Object::OBJ_SWORD_IRON, x);
@@ -451,11 +446,6 @@ void Player::setInitialObjects(bool isDemo)
     }
     else
     {
-        game.LEVEL = 0;
-        if (!game.RandomMaze)  //Do we have an original maze?  Yes:
-            dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
-        else  //Do we have an original maze?  No:
-            dungeon.SetLEVTABRandomMap();  //Sets random seeds for maze.
         PROW = 0x10;
         PCOL = 0x0B;
         PLRBLK.P_ATPOW = 160;
