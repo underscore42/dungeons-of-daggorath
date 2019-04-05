@@ -21,11 +21,8 @@ is held by Douglas J. Morgan.
 #include "sched.h"
 #include "viewer.h"
 #include "player.h"
-#include "oslink.h"
-#include "math.h"
 #include "enhanced.h"
 
-extern OS_Link      oslink;
 extern Player       player;
 extern RNG          rng;
 extern Viewer       viewer;
