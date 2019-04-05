@@ -152,7 +152,6 @@ void OS_Link::init()
                 if (game.demoRestart)
                 {
                     // Restart demo
-                    game.hasWon = false;
                     object.Reset();
                     creature.Reset();
                     parser.Reset();

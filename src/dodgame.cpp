@@ -82,6 +82,8 @@ void dodGame::COMINI()
     IsDemo = AUTFLG;
     if (IsDemo)
     {
+        hasWon = false;
+        DEMOPTR = 0;
         LEVEL = 2;
         dungeon.SetLEVTABOrig();  //Make sure the original seeds aren't overwritten from pervious new game.
     }
@@ -139,6 +141,12 @@ void dodGame::Restart()
     viewer.Reset();
     hasWon = false;
 
+    LEVEL = 0;
+    if (!RandomMaze)
+        dungeon.SetLEVTABOrig();
+    else
+        dungeon.SetLEVTABRandomMap();
+
     dungeon.VFTPTR = 0;
     scheduler.SYSTCB();
     object.CreateAll();
@@ -157,7 +165,7 @@ void dodGame::Restart()
         oslink.process_events();
         ticks2 = SDL_GetTicks();
     }
-    while (ticks2 < ticks1 + 2500);
+    while (ticks2 < ticks1 + viewer.prepPause);
 
     creature.NEWLVL();
     INIVU();
