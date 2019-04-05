@@ -14,6 +14,8 @@ is held by Douglas J. Morgan.
 //
 // Implementation of Dungeon class
 
+#include <random>
+
 #include "dungeon.h"
 #include "dodgame.h"
 #include "player.h"
@@ -22,15 +24,6 @@ is held by Douglas J. Morgan.
 extern Scheduler    scheduler;
 extern Player       player;
 extern dodGame      game;
-
-// Scaffolding Code
-
-#include <stdio.h>
-
-#ifdef LINUX
-#include <time.h>
-#define GetTickCount() time(NULL)
-#endif
 
 void Dungeon::printMaze()
 {
@@ -523,12 +516,10 @@ void Dungeon::SetVFTTABRandomMap()
 
 void Dungeon::SetLEVTABRandomMap()
 {
-    srand(GetTickCount());
-    LEVTAB[0] = rand() & 255;
-    LEVTAB[1] = rand() & 255;
-    LEVTAB[2] = rand() & 255;
-    LEVTAB[3] = rand() & 255;
-    LEVTAB[4] = rand() & 255;
-    LEVTAB[5] = rand() & 255;
-    LEVTAB[6] = rand() & 255;
+    std::random_device rdev;
+    std::mt19937 rng(rdev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0);
+
+    for (unsigned i = 0; i < 7; ++i)
+        LEVTAB[i] = dist(rng);
 }
