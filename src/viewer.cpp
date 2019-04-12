@@ -386,10 +386,6 @@ void Viewer::draw_game()
     if (display_mode == MODE_MAP)
     {
         // Draw Map
-        glClearColor(1.0, 1.0, 1.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
-        glLoadIdentity();
         MAPPER();
         SDL_GL_SwapWindow(oslink.window);
     }
@@ -1185,12 +1181,9 @@ void Viewer::VIEWER()
         }
         while (x != 0);
 
-        b = player.PDIR;
-        u = b;
-
         for (dodBYTE ftctr = 0; ftctr < 3; ++ftctr)
         {
-            b = dungeon.NEIBOR[u + FLATAB[ftctr]];
+            b = dungeon.NEIBOR[player.PDIR + FLATAB[ftctr]];
             if (b == dungeon.HF_SDR)
             {
                 --MAGFLG;
@@ -1202,42 +1195,36 @@ void Viewer::VIEWER()
 
         const int creNum = creature.CFIND2(dungeon.DROW);
         if (creNum != -1)
-        {
             CMRDRW(FWDCRE[creature.CCBLND[creNum].creature_id], creNum);
-        }
 
-        PDRAW(LPK_VLA, 3, u);
-        PDRAW(RPK_VLA, 1, u);
+        PDRAW(LPK_VLA, 3, player.PDIR);
+        PDRAW(RPK_VLA, 1, player.PDIR);
 
         // Draw vertical features
         const dodBYTE vft = dungeon.VFIND(dungeon.DROW);
-        if (vft == Dungeon::VF_NULL)
+        switch(vft)
         {
+        case Dungeon::VF_HOLE_UP:
+            DRAWIT(HUP_VLA);
+            break;
+        case Dungeon::VF_LADDER_UP:
+            DRAWIT(LAD_VLA);
+            DRAWIT(HUP_VLA);
+            break;
+        case Dungeon::VF_HOLE_DOWN:
+            DRAWIT(HDN_VLA);
             DRAWIT(CEI_VLA);
-        }
-        else
-        {
-            switch(vft)
-            {
-            case Dungeon::VF_HOLE_UP:
-                DRAWIT(HUP_VLA);
-                break;
-            case Dungeon::VF_LADDER_UP:
-                DRAWIT(LAD_VLA);
-                DRAWIT(HUP_VLA);
-                break;
-            case Dungeon::VF_HOLE_DOWN:
-                DRAWIT(HDN_VLA);
-                DRAWIT(CEI_VLA);
-                break;
-            case Dungeon::VF_LADDER_DOWN:
-                DRAWIT(LAD_VLA);
-                DRAWIT(HDN_VLA);
-                DRAWIT(CEI_VLA);
-                break;
-            default:
-                break; // should never get here
-            }
+            break;
+        case Dungeon::VF_LADDER_DOWN:
+            DRAWIT(LAD_VLA);
+            DRAWIT(HDN_VLA);
+            DRAWIT(CEI_VLA);
+            break;
+        case Dungeon::VF_NULL:
+            DRAWIT(CEI_VLA);
+            break;
+        default:
+            break;
         }
 
         // Draw Objects
@@ -1252,10 +1239,9 @@ void Viewer::VIEWER()
             DRAWIT(FWDOBJ[object.OCBLND[objIdx].obj_type]);
         }
 
-        if (dungeon.NEIBOR[u] != 0)
-        {
+        if (dungeon.NEIBOR[player.PDIR] != 0)
             break;
-        }
+
         dungeon.DROW.row += dungeon.STPTAB[player.PDIR * 2];
         dungeon.DROW.col += dungeon.STPTAB[player.PDIR * 2 + 1];
         ++RANGE;
@@ -1297,7 +1283,7 @@ void Viewer::PDRAW(const int * vl, dodBYTE dir, dodBYTE pdir)
     if (dungeon.NEIBOR[pdir + dir] != 0)
         return;
 
-    const dodBYTE DIR = ((dir + player.PDIR) & 3);
+    const dodBYTE DIR = (dir + player.PDIR) & 3;
     const RowCol side(
         dungeon.DROW.row + dungeon.STPTAB[DIR * 2],
         dungeon.DROW.col + dungeon.STPTAB[DIR * 2 + 1]
@@ -1422,155 +1408,159 @@ void Viewer::PRTOBJ(int X, bool highlite)
 
 void Viewer::MAPPER()
 {
-    float DoorOffset;
-    RowCol rc;
-
-    dungeon.DROW.row = 31;
-    dungeon.DROW.col = 31;
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
+    glLoadIdentity();
     glColor3f(0.0, 0.0, 0.0);
+
+    RowCol rc(31, 31);
+
     do
     {
-        const int mazIdx = dungeon.RC2IDX(dungeon.DROW.row, dungeon.DROW.col);
-        if (dungeon.MAZLND[mazIdx] != 0xFF)
+        const dodBYTE cell = dungeon.cell(rc.row, rc.col);
+        if (cell != 0xFF)
         {
+            // each cell is 8x6 pixel in size
             glBegin(GL_QUADS);
-            glVertex2f(crd.newX(dungeon.DROW.col * 8), crd.newY(dungeon.DROW.row * 6));
-            glVertex2f(crd.newX(dungeon.DROW.col * 8), crd.newY((dungeon.DROW.row + 1) * 6));
-            glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8), crd.newY((dungeon.DROW.row + 1) * 6));
-            glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8), crd.newY(dungeon.DROW.row * 6));
+            glVertex2f(crd.newX(rc.col * 8), crd.newY(rc.row * 6));
+            glVertex2f(crd.newX(rc.col * 8), crd.newY((rc.row + 1) * 6));
+            glVertex2f(crd.newX((rc.col + 1) * 8), crd.newY((rc.row + 1) * 6));
+            glVertex2f(crd.newX((rc.col + 1) * 8), crd.newY(rc.row * 6));
             glEnd();
             if (game.MarkDoorsOnScrollMaps)    //Do we need to mark the doors on the scroll maps?
             {
-                if ((dungeon.MAZLND[mazIdx] & 0x0c) == (0x01 << 2) ||
-                    (dungeon.MAZLND[mazIdx] & 0x0c) == (0x02 << 2))
+                float DoorOffset;
+                if ((cell & 0x0c) == (0x01 << 2) ||
+                    (cell & 0x0c) == (0x02 << 2))
                 {
                     //Do we have a east door or secret door?
-                    DoorOffset = ((dungeon.MAZLND[mazIdx] | 0xcc) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
+                    DoorOffset = ((cell | 0xcc) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
                     DoorOffset = DoorOffset / 4;
                     glColor3f(1.0, 1.0, 1.0);
-                    if ((dungeon.MAZLND[mazIdx] & 0x0c) == (0x01 << 2))    //Is this a regular door?  Yes:
+                    if ((cell & 0x0c) == (0x01 << 2))    //Is this a regular door?  Yes:
                     {
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6 + 2.5));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY((dungeon.DROW.row + 1) * 6));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY((rc.row + 1) * 6));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.5));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 1 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 1 + DoorOffset), crd.newY(rc.row * 6 + 2.5));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.5));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 4));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.5));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 1 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 1 + DoorOffset), crd.newY(rc.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 4));
                         glEnd();
                     }
                     else      //Is this a regular door?  No:
                     {
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 1.75));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6 + 1.75));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4.5));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + DoorOffset), crd.newY((dungeon.DROW.row + 1) * 6));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY(rc.row * 6 + 4.5));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + DoorOffset), crd.newY((rc.row + 1) * 6));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.25));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.25));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 2.25));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 3));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 2.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 3));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.5 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 3.25));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 3.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.5 + DoorOffset), crd.newY(rc.row * 6 + 3.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 0.75 + DoorOffset), crd.newY(rc.row * 6 + 3.25));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 3.25));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 3.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.75 + DoorOffset), crd.newY(rc.row * 6 + 4));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 - 1 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4.25));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8 + 0.5 + DoorOffset), crd.newY(dungeon.DROW.row * 6 + 4.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 - 1 + DoorOffset), crd.newY(rc.row * 6 + 4.25));
+                        glVertex2f(crd.newX((rc.col + 1) * 8 + 0.5 + DoorOffset), crd.newY(rc.row * 6 + 4.25));
                         glEnd();
                     }  //Is this a regular door?
                     glColor3f(0.0, 0.0, 0.0);
                 }  //Do we have a east door or secret door?
-                if ((dungeon.MAZLND[mazIdx] & 0x30) == (0x01 << 4) ||
-                    (dungeon.MAZLND[mazIdx] & 0x30) == (0x02 << 4))
+                if ((cell & 0x30) == (0x01 << 4) ||
+                    (cell & 0x30) == (0x02 << 4))
                 {
                     //Do we have a south door or secret door?
-                    DoorOffset = ((dungeon.MAZLND[mazIdx] | 0x33) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
+                    DoorOffset = ((cell | 0x33) != 0xff);  //Move door line over one into next room if we don't have wall on either side.
                     DoorOffset = DoorOffset / 4;
                     glColor3f(1.0, 1.0, 1.0);
-                    if ((dungeon.MAZLND[mazIdx] & 0x30) == (0x01 << 4))    //Is this a regular door?  Yes:
+                    if ((cell & 0x30) == (0x01 << 4))    //Is this a regular door?  Yes:
                     {
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX((rc.col + 1) * 8), crd.newY((rc.row + 1) * 6 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3), crd.newY((dungeon.DROW.row + 1) * 6 - 0.75 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 - 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3), crd.newY((rc.row + 1) * 6 - 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 - 0.75 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 - 0.75 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 + 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 - 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 + 0.75 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 + 0.75 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 - 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 + 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 - 0.75 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 + 0.75 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 + 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 + 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 + 0.75 + DoorOffset));
                         glEnd();
                     }
                     else      //Is this a regular door?  No:
                     {
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 2.75), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 2.75), crd.newY((rc.row + 1) * 6 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 5), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX((dungeon.DROW.col + 1) * 8), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 5), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX((rc.col + 1) * 8), crd.newY((rc.row + 1) * 6 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 - 1 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 - 1 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 - 1 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 - 1 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 - 1 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 - 0.25 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 - 1 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 - 0.25 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3.25), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.5), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3.25), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.5), crd.newY((rc.row + 1) * 6 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.75), crd.newY((dungeon.DROW.row + 1) * 6 + 0.75 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.75), crd.newY((rc.row + 1) * 6 + 0.75 + DoorOffset));
                         glEnd();
                         glBegin(GL_LINES);
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 3), crd.newY((dungeon.DROW.row + 1) * 6 + 1 + DoorOffset));
-                        glVertex2f(crd.newX(dungeon.DROW.col * 8 + 4.5), crd.newY((dungeon.DROW.row + 1) * 6 + 1 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 3), crd.newY((rc.row + 1) * 6 + 1 + DoorOffset));
+                        glVertex2f(crd.newX(rc.col * 8 + 4.5), crd.newY((rc.row + 1) * 6 + 1 + DoorOffset));
                         glEnd();
 
                     }
@@ -1578,14 +1568,14 @@ void Viewer::MAPPER()
                 }  //Do we have a south door or secret door?
             }  //Do we need to mark the doors on the scroll maps?
         }
-        --dungeon.DROW.col;
-        if (dungeon.DROW.col == 0xFF)
+        --rc.col;
+        if (rc.col == 0xFF)
         {
-            --dungeon.DROW.row;
-            dungeon.DROW.col = 31;
+            --rc.row;
+            rc.col = 31;
         }
     }
-    while (dungeon.DROW.row != 0xFF);
+    while (rc.row != 0xFF);
 
     glColor3f(1.0, 1.0, 1.0);
     if (showSeerMap == true)
@@ -1599,70 +1589,70 @@ void Viewer::MAPPER()
                 break;
             if (object.OCBLND[objIdx].P_OCOWN != 0)
                 continue;
-            rc.row = object.OCBLND[objIdx].P_OCROW;
-            rc.col = object.OCBLND[objIdx].P_OCCOL;
+            const dodBYTE objectRow = object.OCBLND[objIdx].P_OCROW * 6;
+            const dodBYTE objectCol = object.OCBLND[objIdx].P_OCCOL * 8;
             glBegin(GL_QUADS);
-            glVertex2f(crd.newX((rc.col * 8) + 4), crd.newY((rc.row * 6) + 2));
-            glVertex2f(crd.newX((rc.col * 8) + 4), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
+            glVertex2f(crd.newX(objectCol + 4), crd.newY(objectRow + 2));
+            glVertex2f(crd.newX(objectCol + 4), crd.newY(objectRow + 4));
+            glVertex2f(crd.newX(objectCol + 5), crd.newY(objectRow + 4));
+            glVertex2f(crd.newX(objectCol + 5), crd.newY(objectRow + 2));
             glEnd();
         }
 
         // Mark Creatures
-        for (int creIdx = 0; creIdx < 32; ++creIdx)
+        for (unsigned creIdx = 0; creIdx < 32; ++creIdx)
         {
             if (creature.CCBLND[creIdx].P_CCUSE == 0)
                 continue;
-            rc.row = creature.CCBLND[creIdx].P_CCROW;
-            rc.col = creature.CCBLND[creIdx].P_CCCOL;
+            const dodBYTE creatureRow = creature.CCBLND[creIdx].P_CCROW * 6;
+            const dodBYTE creatureCol = creature.CCBLND[creIdx].P_CCCOL * 8;
             glBegin(GL_QUADS);
-            glVertex2f(crd.newX((rc.col * 8) + 1), crd.newY((rc.row * 6) + 2));
-            glVertex2f(crd.newX((rc.col * 8) + 1), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 2));
+            glVertex2f(crd.newX(creatureCol + 1), crd.newY(creatureRow + 2));
+            glVertex2f(crd.newX(creatureCol + 1), crd.newY(creatureRow + 4));
+            glVertex2f(crd.newX(creatureCol + 2), crd.newY(creatureRow + 4));
+            glVertex2f(crd.newX(creatureCol + 2), crd.newY(creatureRow + 2));
 
-            glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
-            glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 4));
-            glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 2));
+            glVertex2f(crd.newX(creatureCol + 5), crd.newY(creatureRow + 2));
+            glVertex2f(crd.newX(creatureCol + 5), crd.newY(creatureRow + 4));
+            glVertex2f(crd.newX(creatureCol + 6), crd.newY(creatureRow + 4));
+            glVertex2f(crd.newX(creatureCol + 6), crd.newY(creatureRow + 2));
 
-            glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 1));
-            glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 5));
-            glVertex2f(crd.newX((rc.col * 8) + 4), crd.newY((rc.row * 6) + 5));
-            glVertex2f(crd.newX((rc.col * 8) + 4), crd.newY((rc.row * 6) + 1));
+            glVertex2f(crd.newX(creatureCol + 3), crd.newY(creatureRow + 1));
+            glVertex2f(crd.newX(creatureCol + 3), crd.newY(creatureRow + 5));
+            glVertex2f(crd.newX(creatureCol + 4), crd.newY(creatureRow + 5));
+            glVertex2f(crd.newX(creatureCol + 4), crd.newY(creatureRow + 1));
             glEnd();
         }
     }
 
     // Mark Player
-    rc.row = player.PROW;
-    rc.col = player.PCOL;
+    const dodBYTE playerRow = player.PROW * 6;
+    const dodBYTE playerCol = player.PCOL * 8;
     glBegin(GL_QUADS);
-    glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 1));
-    glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 2));
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 2));
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 1));
+    glVertex2f(crd.newX(playerCol + 2), crd.newY(playerRow + 1));
+    glVertex2f(crd.newX(playerCol + 2), crd.newY(playerRow + 2));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 2));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 1));
 
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 1));
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
-    glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 2));
-    glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 1));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 1));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 2));
+    glVertex2f(crd.newX(playerCol + 6), crd.newY(playerRow + 2));
+    glVertex2f(crd.newX(playerCol + 6), crd.newY(playerRow + 1));
 
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 2));
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 4));
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 2));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 4));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 4));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 2));
 
-    glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 4));
-    glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 5));
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 5));
-    glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 4));
+    glVertex2f(crd.newX(playerCol + 2), crd.newY(playerRow + 4));
+    glVertex2f(crd.newX(playerCol + 2), crd.newY(playerRow + 5));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 5));
+    glVertex2f(crd.newX(playerCol + 3), crd.newY(playerRow + 4));
 
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
-    glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 5));
-    glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 5));
-    glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 4));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 4));
+    glVertex2f(crd.newX(playerCol + 5), crd.newY(playerRow + 5));
+    glVertex2f(crd.newX(playerCol + 6), crd.newY(playerRow + 5));
+    glVertex2f(crd.newX(playerCol + 6), crd.newY(playerRow + 4));
     glEnd();
 
     // Mark Vertical Features
@@ -1683,29 +1673,29 @@ void Viewer::MAPPER()
                 break;
             }
         }
-        rc.row = dungeon.VFTTAB[vftIdx++];
-        rc.col = dungeon.VFTTAB[vftIdx++];
+        const dodBYTE vfRow = dungeon.VFTTAB[vftIdx++] * 6;
+        const dodBYTE vfCol = dungeon.VFTTAB[vftIdx++] * 8;
 
         glBegin(GL_QUADS);
-        glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 1));
-        glVertex2f(crd.newX((rc.col * 8) + 2), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 1));
+        glVertex2f(crd.newX(vfCol + 2), crd.newY(vfRow + 1));
+        glVertex2f(crd.newX(vfCol + 2), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 1));
 
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 1));
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 6), crd.newY((rc.row * 6) + 1));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 1));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 6), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 6), crd.newY(vfRow + 1));
 
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 1));
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 2));
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 2));
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 1));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 1));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 2));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 2));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 1));
 
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 4));
-        glVertex2f(crd.newX((rc.col * 8) + 3), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 5));
-        glVertex2f(crd.newX((rc.col * 8) + 5), crd.newY((rc.row * 6) + 4));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 4));
+        glVertex2f(crd.newX(vfCol + 3), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 5));
+        glVertex2f(crd.newX(vfCol + 5), crd.newY(vfRow + 4));
         glEnd();
     }
 }
@@ -1716,44 +1706,40 @@ void Viewer::drawVectorList(const int* VLA) const
         return;
 
     const int numLists = VLA[0];
-    int curList = 0;
+
     int ctr = 1;
 
-    while (curList < numLists)
+    for (int curList = 0; curList < numLists; ++curList)
     {
         const int numVertices = VLA[ctr];
         ++ctr;
-        int curVertex = 0;
-        while (curVertex < (numVertices - 1) )
+
+        for (int curVertex = 0; curVertex < numVertices - 1; ++curVertex)
         {
             if (g_options & (OPT_VECTOR | OPT_HIRES))
             {
-                float x0, y0, x1, y1;
-                x0 = ScaleXf((float)VLA[ctr]) + (float)VCNTRX;
-                y0 = ScaleYf((float)VLA[ctr + 1]) + (float)VCNTRY;
-                x1 = ScaleXf((float)VLA[ctr + 2]) + (float)VCNTRX;
-                y1 = ScaleYf((float)VLA[ctr + 3]) + (float)VCNTRY;
+                const float x0 = ScaleXf((float)VLA[ctr    ]) + (float)VCNTRX;
+                const float y0 = ScaleYf((float)VLA[ctr + 1]) + (float)VCNTRY;
+                const float x1 = ScaleXf((float)VLA[ctr + 2]) + (float)VCNTRX;
+                const float y1 = ScaleYf((float)VLA[ctr + 3]) + (float)VCNTRY;
                 drawVector(x0, y0, x1, y1);
             }
             else
             {
-                float x0, y0, x1, y1;
-                x0 = ScaleXf((float)VLA[ctr]) + (float)VCNTRX;
-                y0 = ScaleYf((float)VLA[ctr + 1]) + (float)VCNTRY;
-                x1 = ScaleXf((float)VLA[ctr + 2]) + (float)VCNTRX;
-                y1 = ScaleYf((float)VLA[ctr + 3]) + (float)VCNTRY;
+                const float x0 = ScaleXf((float)VLA[ctr    ]) + (float)VCNTRX;
+                const float y0 = ScaleYf((float)VLA[ctr + 1]) + (float)VCNTRY;
+                const float x1 = ScaleXf((float)VLA[ctr + 2]) + (float)VCNTRX;
+                const float y1 = ScaleYf((float)VLA[ctr + 3]) + (float)VCNTRY;
                 drawVector((float)(int)x0, (float)(int)y0, (float)(int)x1, (float)(int)y1);
-//              dodSHORT x0, y0, x1, y1;
-//              x0 = ScaleX(VLA[ctr]) + VCNTRX;
-//              y0 = ScaleY(VLA[ctr+1]) + VCNTRY;
-//              x1 = ScaleX(VLA[ctr+2]) + VCNTRX;
-//              y1 = ScaleY(VLA[ctr+3]) + VCNTRY;
-//              drawVector(x0, y0, x1, y1);
+                /*dodSHORT x0, y0, x1, y1;
+                x0 = ScaleX(VLA[ctr    ]) + VCNTRX;
+                y0 = ScaleY(VLA[ctr + 1]) + VCNTRY;
+                x1 = ScaleX(VLA[ctr + 2]) + VCNTRX;
+                y1 = ScaleY(VLA[ctr + 3]) + VCNTRY;
+                drawVector(x0, y0, x1, y1);*/
             }
             ctr += 2;
-            ++curVertex;
         }
-        ++curList;
         ctr += 2;
     }
 }
@@ -1767,10 +1753,10 @@ void Viewer::drawVectorListAQ(const int* VLA) const
     glBegin(GL_QUADS);
     while (curQuad < numQuads)
     {
-        glVertex2f(crd.newXa((double) VLA[ctr]), crd.newYa((double) VLA[ctr + 1]));
-        glVertex2f(crd.newXa((double) VLA[ctr + 2]), crd.newYa((double) VLA[ctr + 3]));
-        glVertex2f(crd.newXa((double) VLA[ctr + 4]), crd.newYa((double) VLA[ctr + 5]));
-        glVertex2f(crd.newXa((double) VLA[ctr + 6]), crd.newYa((double) VLA[ctr + 7]));
+        glVertex2f(crd.newXa((float) VLA[ctr    ]), crd.newYa((float) VLA[ctr + 1]));
+        glVertex2f(crd.newXa((float) VLA[ctr + 2]), crd.newYa((float) VLA[ctr + 3]));
+        glVertex2f(crd.newXa((float) VLA[ctr + 4]), crd.newYa((float) VLA[ctr + 5]));
+        glVertex2f(crd.newXa((float) VLA[ctr + 6]), crd.newYa((float) VLA[ctr + 7]));
         ctr += 8;
         ++curQuad;
     }
@@ -1782,63 +1768,41 @@ void Viewer::drawCharacter(char c) const
     if (c >= 'A' && c <= 'Z')
     {
         drawVectorListAQ(AZ_VLA[c - 64]);
+        return;
     }
     if (c >= '0' && c <= '9')
     {
         drawVectorListAQ(AZ_VLA[c - 13]); //Dependent on ASCII values
+        return;
     }
+
+    int offset = -1;
     switch (c)
     {
-    case ('<'):
-        drawVectorListAQ(AZ_VLA[31]);
-        break;
-    case ('>'):
-        drawVectorListAQ(AZ_VLA[32]);
-        break;
-    case ('{'):
-        drawVectorListAQ(AZ_VLA[33]);
-        break;
-    case ('}'):
-        drawVectorListAQ(AZ_VLA[34]);
-        break;
-    case (' '):
-        break;
-    case ('.'):
-        drawVectorListAQ(AZ_VLA[27]);
-        break;
-    case ('_'):
-        drawVectorListAQ(AZ_VLA[28]);
-        break;
-    case ('!'):
-        drawVectorListAQ(AZ_VLA[29]);
-        break;
-    case ('?'):
-        drawVectorListAQ(AZ_VLA[30]);
-        break;
-    case ('/'):
-        drawVectorListAQ(AZ_VLA[45]);
-        break;
-    case ('\\'):
-        drawVectorListAQ(AZ_VLA[46]);
-        break;
-    case ('%'):
-        drawVectorListAQ(AZ_VLA[47]);
-        break;
-    case ('+'):
-        drawVectorListAQ(AZ_VLA[48]);
-        break;
-    case ('-'):
-        drawVectorListAQ(AZ_VLA[49]);
-        break;
-    default:
-        break;
+        case ('<'): offset = 31; break;
+        case ('>'): offset = 32; break;
+        case ('{'): offset = 33; break;
+        case ('}'): offset = 34; break;
+        case ('.'): offset = 27; break;
+        case ('_'): offset = 28; break;
+        case ('!'): offset = 29; break;
+        case ('?'): offset = 30; break;
+        case ('/'): offset = 45; break;
+        case ('\\'): offset = 46; break;
+        case ('%'): offset = 47; break;
+        case ('+'): offset = 48; break;
+        case ('-'): offset = 49; break;
+        default:
+            break;
     }
+    if (offset >= 0)
+        drawVectorListAQ(AZ_VLA[offset]);
 }
 
 void Viewer::drawString_internal(int x, int y, const dodBYTE * str, int len) const
 {
     glLoadIdentity();
-    glTranslatef(crd.newX(x * 8), crd.newY(((y + 1) * 8)), 0.0);
+    glTranslatef(crd.newX(x * 8), crd.newY((y + 1) * 8), 0.0);
     for (int ctr = 0; ctr < len; ++ctr)
     {
         const char c = dod_to_ascii(*(str + ctr));
@@ -1896,44 +1860,47 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1) const
         glVertex2f(crd.newX(X1), crd.newY(Y1));
         glColor3fv(fgColor);
         glEnd();
+
+        return;
     }
-    else
+
+    const float XL = (X1 > X0) ? (X1 - X0) : (X0 - X1);
+    const float YL = (Y1 > Y0) ? (Y1 - Y0) : (Y0 - Y1);
+    float L = (XL > YL) ? XL : YL;
+    if (L == 0)
+        return;
+
+    float DX = (XL / L) * ((X0 < X1) ? 1.0f : -1.0f);
+    float DY = (YL / L) * ((Y0 < Y1) ? 1.0f : -1.0f);
+
+    if (g_options & OPT_HIRES) // prepare to draw a HIRES line
     {
-        int FADCNT = VCTFAD + 1;
-        float XL = (X1 > X0) ? (X1 - X0) : (X0 - X1);
-        float YL = (Y1 > Y0) ? (Y1 - Y0) : (Y0 - Y1);
-        float L = (XL > YL) ? XL : YL;
-        if (L == 0)
-            return;
+        // in hires mode, all we need to do is increase the # pixels per line.
+        // we are scaling up accoring to the screen width
+        int scale = oslink.width >> 8;
+        DX /= (float)scale;
+        DY /= (float)scale;
+        L *= scale;
+    }
 
-        double DX = ((double) XL / (double) L) * ((X0 < X1) ? 1 : -1);
-        double DY = ((double) YL / (double) L) * ((Y0 < Y1) ? 1 : -1);
+    float XX = X0 + 0.5f;
+    float YY = Y0 + 0.5f;
 
-        if (g_options & OPT_HIRES) // prepare to draw a HIRES line
-        {
-            // in hires mode, all we need to do is increase the # pixels per line.
-            // we are scaling up accoring to the screen width
-            int scale = oslink.width >> 8;
-            DX /= (double)scale;
-            DY /= (double)scale;
-            L *= scale;
-        }
-        double XX = X0 + 0.5;
-        double YY = Y0 + 0.5;
+    int FADCNT = VCTFAD + 1;
+
+    if (g_options & OPT_HIRES)
+    {
         do
         {
             if (--FADCNT == 0)
             {
                 FADCNT = VCTFAD + 1;
-                if (XX >= 0.0 && XX < 256.0 &&
-                        YY >= 0.0 && YY < 152.0)
+                if (XX >= 0.0f && XX < 256.0f && YY >= 0.0f && YY < 152.0f)
                 {
-                    if (g_options & OPT_HIRES)
-                        plotPoint(XX, YY);
-                    else
-                    {
-                        plotPoint((int)XX, (int)YY);
-                    }
+                    // draw a single pixel
+                    glBegin(GL_POINTS);
+                    glVertex2f(crd.newX(XX), crd.newY(YY));
+                    glEnd();
                 }
             }
             XX += DX;
@@ -1942,25 +1909,32 @@ void Viewer::drawVector(float X0, float Y0, float X1, float Y1) const
         }
         while (L > 0);
     }
-}
+    else
+    {
+        do
+        {
+            if (--FADCNT == 0)
+            {
+                FADCNT = VCTFAD + 1;
+                if (XX >= 0.0f && XX < 256.0f && YY >= 0.0f && YY < 152.0f)
+                {
+                    // draw a COCO pixel (square)
+                    const int X = XX;
+                    const int Y = YY;
 
-void Viewer::plotPoint(double X, double Y) const
-{
-    if (g_options & OPT_HIRES)
-    {
-        // draw a single pixel
-        glBegin(GL_POINTS);
-        glVertex2f(crd.newX(X), crd.newY(Y));
-        glEnd();
-    }
-    else   // draw a COCO pixel (square)
-    {
-        glBegin(GL_QUADS);
-        glVertex2f(crd.newX(X    ), crd.newY(Y    ));
-        glVertex2f(crd.newX(X + 1), crd.newY(Y    ));
-        glVertex2f(crd.newX(X + 1), crd.newY(Y + 1));
-        glVertex2f(crd.newX(X    ), crd.newY(Y + 1));
-        glEnd();
+                    glBegin(GL_QUADS);
+                    glVertex2f(crd.newX(X    ), crd.newY(Y    ));
+                    glVertex2f(crd.newX(X + 1), crd.newY(Y    ));
+                    glVertex2f(crd.newX(X + 1), crd.newY(Y + 1));
+                    glVertex2f(crd.newX(X    ), crd.newY(Y + 1));
+                    glEnd();
+                }
+            }
+            XX += DX;
+            YY += DY;
+            --L;
+        }
+        while (L > 0);
     }
 }
 

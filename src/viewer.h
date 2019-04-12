@@ -128,7 +128,7 @@ public:
 
     // Scales X-coordinate
     dodSHORT ScaleX(int x) const { return ((x - VCNTRX) * VXSCAL) / 127; }
-    float ScaleXf(float x) const { return ((x - (float)VCNTRX) * VXSCALf) / 127.0f; }
+    float ScaleXf(float x) const { return ((x - VCNTRX) * VXSCALf) / 127.0f; }
 
     // Scales Y-coordinate
     dodSHORT ScaleY(int y) const { return ((y - VCNTRY) * VYSCAL) / 127; }
@@ -276,17 +276,14 @@ private:
 
     void drawString_internal(int x, int y, const dodBYTE * str, int len) const;
 
-    // Draws one pixel
-    void plotPoint(double X, double Y) const;
-
     char dod_to_ascii(dodBYTE c) const;
 
-    // Data Fields
-    dodSHORT    VCNTRX;
-    dodSHORT    VCNTRY;
+    const dodSHORT VCNTRX;
+    const dodSHORT VCNTRY;
     dodBYTE     MAGFLG;
     int         HLFSCL;
 public:
+    // letters
     int A_VLA[33];
     int B_VLA[49];
     int C_VLA[41];
@@ -313,6 +310,7 @@ public:
     int X_VLA[73];
     int Y_VLA[41];
     int Z_VLA[57];
+    // numbers
     int NM0_VLA[33];
     int NM1_VLA[25];
     int NM2_VLA[49];
@@ -323,6 +321,7 @@ public:
     int NM7_VLA[49];
     int NM8_VLA[57];
     int NM9_VLA[49];
+    // special characters
     int PER_VLA[9];
     int UND_VLA[9];
     int EXP_VLA[17];
@@ -338,6 +337,7 @@ public:
     int DSH_VLA[9];     //Dash
     int * AZ_VLA[50];
 
+    // creatures
     int SP_VLA[39];
     int WR_VLA[42];
     int SC_VLA[41];
@@ -350,33 +350,61 @@ public:
     int K2_VLA[149];
     int W0_VLA[133];
 
+    // wizard with crescent shaped sceptre point
     int W1_VLA[199];
+    // wizard with star shaped sceptre point
     int W2_VLA[185];
 
+    // ladder
     int LAD_VLA[56];
+    // hole up
     int HUP_VLA[29];
+    // hole down
     int HDN_VLA[19];
+
+    // ceiling
     int CEI_VLA[6];
+
+    // left peekaboo shape
     int LPK_VLA[12];
+    // right peekaboo shape
     int RPK_VLA[12];
+
+    // forward secret door
     int FSD_VLA[8];
+    // left secret door
     int LSD_VLA[8];
+    // right secret door
     int RSD_VLA[8];
+    // right wall
     int RWAL_VLA[10];
+    // left wall
     int LWAL_VLA[10];
+    // forward wall
     int FWAL_VLA[11];
+    // right passage
     int RPAS_VLA[15];
+    // left passage
     int LPAS_VLA[15];
+    // forwards passage
     int FPAS_VLA[1];
+    // right door
     int RDOR_VLA[24];
+    // left door
     int LDOR_VLA[24];
+    // forward door
     int FDOR_VLA[25];
 
     int FLATAB[3];
     int ** FLATABv[3];
+
+    // object lookup
     int * FWDOBJ[6];
+
+    // creatures
     int * FWDCRE[12];
 
+    // objects
     int SHIE_VLA[14];
     int SWOR_VLA[11];
     int TORC_VLA[10];
