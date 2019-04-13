@@ -19,7 +19,8 @@ is held by Douglas J. Morgan.
 
 #include "dod.h"
 
-#include <SDL2/SDL_keyboard.h>
+struct Mix_Chunk;
+struct SDL_Keysym;
 
 class Scheduler
 {
@@ -27,18 +28,11 @@ public:
     // Constructor
     Scheduler();
 
-    // Scaffolding
-    //void      printTrace(char * st, int rout);
-    //void      printClock();
-
     // Public Interface
     void        SYSTCB();
     void        SCHED();
     void        CLOCK();
     int         GETTCB();
-    bool        fadeLoop();
-    void        deathFadeLoop();
-    void        winFadeLoop();
     bool        keyCheck();
     bool        keyHandler(SDL_Keysym * keysym);
     void        Reset();
@@ -53,8 +47,6 @@ public:
     // Public Data Fields
     Task    TCBLND[38];
 
-    dodBYTE DERR[15];
-
     enum   // task IDs
     {
         TID_CLOCK       = 0,
@@ -66,24 +58,19 @@ public:
         TID_CRTMOVE     = 6,
     };
 
-
     Uint32      curTime;
     Uint32      elapsedTime;
 
     Mix_Chunk * hrtSound[2];
-    int         hrtChannel;
+    static constexpr int hrtChannel = 0;
 
     dodBYTE     ZFLAG;
 
 private:
-    // Data Fields
-    int         TCBPTR;
-    dodBYTE     KBDHDR;
-    dodBYTE     KBDTAL;
+    int TCBPTR;
 
-    dodBYTE     SLEEP;
-    dodBYTE     NOISEF;
-    dodBYTE     NOISEV;
+    // disk error string
+    dodBYTE DERR[15];
 };
 
 #endif // DOD_SCHEDULER_HEADER

@@ -17,6 +17,9 @@ is held by Douglas J. Morgan.
 #include <iostream>
 #include <fstream>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
+
 using namespace std;
 
 #include "sched.h"
@@ -41,6 +44,9 @@ extern OS_Link  oslink;
 Scheduler::Scheduler()
 {
     Reset();
+
+    // DISK ERROR !!!
+    Utils::LoadFromHex(DERR, "69133580B293E40DEF60");
 }
 
 void Scheduler::Reset()
@@ -48,13 +54,7 @@ void Scheduler::Reset()
     curTime = 0;
     elapsedTime = 0;
     TCBPTR = 0;
-    KBDHDR = 0;
-    KBDTAL = 0;
-    SLEEP = 0;
-    NOISEF = 0;
-    NOISEV = 0;
     ZFLAG = 0;
-    hrtChannel = 0;
 
     for (int ctr = 0; ctr < 38; ++ctr)
         TCBLND[ctr].clear();
@@ -70,10 +70,7 @@ void Scheduler::LoadSounds()
 // Creates initial Task Blocks
 void Scheduler::SYSTCB()
 {
-    int ctr;
-    int TCBindex;
-
-    for (ctr = 0; ctr < 38; ++ctr)
+    for (int ctr = 0; ctr < 38; ++ctr)
     {
         TCBLND[ctr].clear();
     }
@@ -82,26 +79,28 @@ void Scheduler::SYSTCB()
 
     TCBLND[0].type = TID_CLOCK;
     TCBLND[0].frequency = 17;       // One JIFFY
-    TCBindex = GETTCB();
+    GETTCB();
 
     TCBLND[1].type = TID_PLAYER;
     TCBLND[1].frequency = 17;       // One JIFFY
-    TCBindex = GETTCB();
+    GETTCB();
 
     TCBLND[2].type = TID_REFRESH_DISP;
     TCBLND[2].frequency = 300;      // Three TENTHs
-    TCBindex = GETTCB();
+    GETTCB();
 
     TCBLND[3].type = TID_HRTSLOW;
-    TCBindex = GETTCB();
+    GETTCB();
 
     TCBLND[4].type = TID_TORCHBURN;
     TCBLND[4].frequency = 5000;     // Five Seconds
-    TCBindex = GETTCB();
+    GETTCB();
 
     TCBLND[5].type = TID_CRTREGEN;
     TCBLND[5].frequency = 300000;   // Five minutes
-    TCBindex = GETTCB();
+    GETTCB();
+
+    TCBPTR = 6; // point to end of task blocks
 }
 
 // This is the Main Loop of the game.  Originally it was
@@ -113,49 +112,39 @@ void Scheduler::SYSTCB()
 // not have any queues, but a simple array of Task objects.
 void Scheduler::SCHED()
 {
-    // Initialization
-    int result = 0;  // not currently being used
-    int ctr = 0;
-
     const Uint32 targetFrameTime = 1000 / 60; // 60 FPS
 
+    // Set next_time to a sane value, this also helps to keep repeated intros
+    // in sync.
+    curTime = SDL_GetTicks();
+    for (int i = 0; i < TCBPTR; ++i)
+        TCBLND[i].next_time = curTime + TCBLND[i].frequency;
+
     // Main game execution loop
-    do
+    for (;;)
     {
         curTime = SDL_GetTicks();
 
-        if (curTime >= TCBLND[ctr].next_time)
+        for (int ctr = 0; ctr < TCBPTR; ++ctr)
         {
-            switch (TCBLND[ctr].type)
+            if (curTime >= TCBLND[ctr].next_time)
             {
-            case TID_CLOCK:
-                CLOCK();
-                break;
-            case TID_PLAYER:
-                result = player.PLAYER();
-                break;
-            case TID_REFRESH_DISP:
-                result = viewer.LUKNEW();
-                break;
-            case TID_HRTSLOW:
-                result = player.HSLOW();
-                break;
-            case TID_TORCHBURN:
-                result = player.BURNER();
-                break;
-            case TID_CRTREGEN:
-                result = creature.CREGEN();
-                break;
-            case TID_CRTMOVE:
-                result = creature.CMOVE(ctr, TCBLND[ctr].data);
-                break;
-            default:
-                // error
-                break;
+                switch (TCBLND[ctr].type)
+                {
+                case TID_CLOCK:        CLOCK();           break;
+                case TID_PLAYER:       player.PLAYER();   break;
+                case TID_REFRESH_DISP: viewer.LUKNEW();   break;
+                case TID_HRTSLOW:      player.HSLOW();    break;
+                case TID_TORCHBURN:    player.BURNER();   break;
+                case TID_CRTREGEN:     creature.CREGEN(); break;
+                case TID_CRTMOVE:
+                    creature.CMOVE(ctr, TCBLND[ctr].data);
+                    break;
+                default:
+                    break;
+                }
             }
         }
-
-        (ctr < TCBPTR) ? ++ctr : ctr = 0;
 
         if (ZFLAG != 0) // Saving or Loading
         {
@@ -183,8 +172,7 @@ void Scheduler::SCHED()
         // Limit FPS
         if ((SDL_GetTicks() - curTime) < targetFrameTime)
             SDL_Delay(targetFrameTime - (SDL_GetTicks() - curTime));
-    }
-    while (result == 0);
+    };
 }
 
 // This is the heart of the game, literally.  It manages
@@ -197,11 +185,7 @@ void Scheduler::SCHED()
 // other sounds.
 void Scheduler::CLOCK()
 {
-    // Update Task's next_time
-    TCBLND[0].next_time = curTime +
-                          TCBLND[0].frequency;
-
-    // Update elaplsed time
+    // Update elapsed time
     elapsedTime = curTime - TCBLND[0].prev_time;
 
     // Reality check
@@ -212,6 +196,9 @@ void Scheduler::CLOCK()
 
     if (elapsedTime >= 17)
     {
+        // Update Task's next_time
+        TCBLND[0].next_time = curTime + TCBLND[0].frequency;
+
         // Update Task's prev_time
         TCBLND[0].prev_time = curTime;
         if (player.HBEATF != 0)
@@ -279,147 +266,6 @@ int Scheduler::GETTCB()
 {
     ++TCBPTR;
     return (TCBPTR - 1);
-}
-
-// All the following methods should really be moved to the
-// OS_Link class.
-
-// Used by wizard fade in/out function
-bool Scheduler::fadeLoop()
-{
-    SDL_Event event;
-    viewer.displayCopyright();
-    viewer.displayWelcomeMessage();
-
-    // Start buzz
-    Mix_Volume(viewer.fadChannel, 0);
-    Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
-
-    while(true)
-    {
-        if ( keyCheck() )
-        {
-            viewer.clearArea(&viewer.TXTPRI);
-            while(SDL_PollEvent(&event))
-            {
-                ; // clear event buffer
-            }
-
-            // Stop buzz
-            Mix_HaltChannel(viewer.fadChannel);
-
-            return false;   // auto-play mode off == start demo game
-        }
-        if ( viewer.draw_fade() )
-        {
-            // Stop buzz
-            Mix_HaltChannel(viewer.fadChannel);
-
-            return true;    // auto-play mode on == start regular game
-        }
-    }
-}
-
-void Scheduler::deathFadeLoop()
-{
-    SDL_Event event;
-    viewer.displayDeath();
-    viewer.fadeVal = -2;
-    viewer.VXSCAL = 0x80;
-    viewer.VYSCAL = 0x80;
-    viewer.VXSCALf = 128.0f;
-    viewer.VYSCALf = 128.0f;
-    viewer.delay = 0;
-    viewer.VCTFAD = 32;
-    viewer.done = false;
-
-    while(SDL_PollEvent(&event))
-    {
-        ; // clear event buffer
-    }
-
-    // Start buzz
-    Mix_Volume(viewer.fadChannel, 0);
-    Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
-
-    while (!viewer.done)
-    {
-        viewer.death_fade(viewer.W1_VLA);
-        EscCheck();
-    }
-
-    // Stop buzz
-    Mix_HaltChannel(viewer.fadChannel);
-
-    while(SDL_PollEvent(&event))
-    {
-        ; // clear event buffer
-    }
-
-    while(true)
-    {
-        viewer.death_fade(viewer.W1_VLA);
-        if ( keyCheck() )
-        {
-            viewer.clearArea(&viewer.TXTPRI);
-            while(SDL_PollEvent(&event))
-            {
-                ; // clear event buffer
-            }
-            return;
-        }
-    }
-}
-
-void Scheduler::winFadeLoop()
-{
-    SDL_Event event;
-    viewer.displayWinner();
-    viewer.fadeVal = -2;
-    viewer.VXSCAL = 0x80;
-    viewer.VYSCAL = 0x80;
-    viewer.VXSCALf = 128.0f;
-    viewer.VYSCALf = 128.0f;
-    viewer.delay = 0;
-    viewer.VCTFAD = 32;
-    viewer.done = false;
-
-    while(SDL_PollEvent(&event))
-    {
-        ; // clear event buffer
-    }
-
-    // Start buzz
-    Mix_Volume(viewer.fadChannel, 0);
-    Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
-
-    while (!viewer.done)
-    {
-        viewer.death_fade(viewer.W2_VLA);
-        EscCheck();
-    }
-
-    // Stop buzz
-    Mix_HaltChannel(viewer.fadChannel);
-
-    while(true)
-    {
-        viewer.death_fade(viewer.W2_VLA);
-        if ( keyCheck() )
-        {
-            viewer.clearArea(&viewer.TXTPRI);
-            while(SDL_PollEvent(&event))
-            {
-                ; // clear event buffer
-            }
-            return;
-        }
-    }
-
-    while(SDL_PollEvent(&event))
-    {
-        ; // clear event buffer
-    }
 }
 
 // Used by wizard fade in/out function
@@ -518,7 +364,7 @@ void Scheduler::SAVE()
     if (!fout)
     {
         // DISK ERROR
-        viewer.OUTSTR(DERR);
+        viewer.OUTSTI(DERR);
         viewer.PROMPT();
         return;
     }
@@ -717,7 +563,7 @@ void Scheduler::LOAD()
     if (!fin)
     {
         // DISK ERROR
-        viewer.OUTSTR(DERR);
+        viewer.OUTSTI(DERR);
         viewer.PROMPT();
         return;
     }
