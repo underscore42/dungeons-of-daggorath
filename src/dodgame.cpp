@@ -208,7 +208,7 @@ void dodGame::WAIT()
             {
                 return;
             }
-            scheduler.EscCheck();
+            scheduler.keyCheck();
         }
         scheduler.curTime = SDL_GetTicks();
     }

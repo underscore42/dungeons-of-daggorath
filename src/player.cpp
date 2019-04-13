@@ -322,7 +322,7 @@ void Player::HUPDAT()
                     if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
                     {
                         scheduler.CLOCK();
-                        scheduler.EscCheck();
+                        scheduler.keyCheck();
                     }
                     scheduler.curTime = SDL_GetTicks();
                 }
@@ -353,7 +353,7 @@ void Player::HUPDAT()
                     if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
                     {
                         scheduler.CLOCK();
-                        scheduler.EscCheck();
+                        scheduler.keyCheck();
                     }
                     scheduler.curTime = SDL_GetTicks();
                 }
@@ -639,7 +639,7 @@ void Player::PATTK()
                 while (!viewer.done)
                 {
                     viewer.enough_fade();
-                    scheduler.EscCheck();
+                    scheduler.keyCheck();
                 }
 
                 // Stop buzz

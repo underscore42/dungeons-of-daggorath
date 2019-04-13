@@ -40,7 +40,6 @@ extern Player   player;
 extern Viewer   viewer;
 extern OS_Link  oslink;
 
-// Constructor
 Scheduler::Scheduler()
 {
     Reset();
@@ -60,14 +59,12 @@ void Scheduler::Reset()
         TCBLND[ctr].clear();
 }
 
-// Public Interface
 void Scheduler::LoadSounds()
 {
     hrtSound[0] = Utils::LoadSound("17_heart.wav");
     hrtSound[1] = Utils::LoadSound("18_heart.wav");
 }
 
-// Creates initial Task Blocks
 void Scheduler::SYSTCB()
 {
     for (int ctr = 0; ctr < 38; ++ctr)
@@ -103,13 +100,6 @@ void Scheduler::SYSTCB()
     TCBPTR = 6; // point to end of task blocks
 }
 
-// This is the Main Loop of the game.  Originally it was
-// a port of the scheduling algorithm used in the source
-// code, but it has been entirely replaced with a simpler
-// algorithm that works better on modern platforms.
-//
-// It uses milliseconds instead of JIFFYs.  And it does
-// not have any queues, but a simple array of Task objects.
 void Scheduler::SCHED()
 {
     const Uint32 targetFrameTime = 1000 / 60; // 60 FPS
@@ -175,14 +165,6 @@ void Scheduler::SCHED()
     };
 }
 
-// This is the heart of the game, literally.  It manages
-// the heartbeat, calls for the screen to be redrawn, and
-// polls the OS for key strokes.
-//
-// This routine is called every 17 milliseconds from the
-// scheduler, and also from the blocking loops after each
-// sound, which allows the heartbeat to mix in with the
-// other sounds.
 void Scheduler::CLOCK()
 {
     // Update elapsed time
@@ -261,14 +243,6 @@ void Scheduler::CLOCK()
     }
 }
 
-// Gets next available Task Block and updates the index
-int Scheduler::GETTCB()
-{
-    ++TCBPTR;
-    return (TCBPTR - 1);
-}
-
-// Used by wizard fade in/out function
 bool Scheduler::keyCheck()
 {
     SDL_Event event;
@@ -291,66 +265,20 @@ bool Scheduler::keyCheck()
     return false;
 }
 
-// Used by wizard fade in/out function
 bool Scheduler::keyHandler(SDL_Keysym * keysym)
 {
-    bool rc;
-
     switch(keysym->scancode)
     {
     case SDL_SCANCODE_ESCAPE:
         Mix_HaltChannel(viewer.fadChannel);
 
-        rc = oslink.main_menu();  // calls the meta-menu
+        const bool rc = oslink.main_menu();  // calls the meta-menu
 
         Mix_Volume(viewer.fadChannel, 0);
         Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
         return rc;
     default:
         return true;
-    }
-}
-
-// Used during fainting and intermission
-bool Scheduler::EscCheck()
-{
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-        case SDL_KEYDOWN:
-            return ( keyHandler(&event.key.keysym) );
-            break;
-        case SDL_QUIT:
-            oslink.quitSDL(0); // eventually change to meta-menu
-            break;
-        case SDL_WINDOWEVENT:
-            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                SDL_GL_SwapWindow(oslink.window);
-            break;
-        }
-    }
-    return false;
-}
-
-// Used by wizard fade in/out function
-bool Scheduler::EscHandler(SDL_Keysym * keysym)
-{
-    bool rc;
-
-    switch(keysym->scancode)
-    {
-    case SDL_SCANCODE_ESCAPE:
-        Mix_HaltChannel(viewer.fadChannel);
-
-        rc = oslink.main_menu();  // Calls the meta-menu
-
-        Mix_Volume(viewer.fadChannel, 0);
-        Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
-        return (!rc);
-    default:
-        return false;
     }
 }
 
@@ -772,14 +700,6 @@ void Scheduler::LOAD()
 
 }
 
-/***********************************************************************
-  Member:  pause
-
-  Vars:    state - Used to toggle current pause state
-                 - true - pause the game, false - unpause the game
-
-  Note:    Only saves state of TCBs, no actual sidestepping of execution
-***********************************************************************/
 void Scheduler::pause(bool state)
 {
     // The current pause state of the game
@@ -800,17 +720,4 @@ void Scheduler::pause(bool state)
             TCBLND[i].prev_time += (curTime - savedTime);
         }
     }
-    return;
-}
-
-/***********************************************************************
-  Member:  updateCreatureRegen
-
-  Vars:    newTime - The new creature regen time (in minutes)
-
-  Note:    This takes effect after the next creature regen
-***********************************************************************/
-void Scheduler::updateCreatureRegen(int newTime)
-{
-    TCBLND[5].frequency = 60000 * newTime;
 }
