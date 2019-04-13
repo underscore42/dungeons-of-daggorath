@@ -270,6 +270,7 @@ bool Scheduler::keyHandler(SDL_Keysym * keysym)
     switch(keysym->scancode)
     {
     case SDL_SCANCODE_ESCAPE:
+    {
         Mix_HaltChannel(viewer.fadChannel);
 
         const bool rc = oslink.main_menu();  // calls the meta-menu
@@ -277,6 +278,7 @@ bool Scheduler::keyHandler(SDL_Keysym * keysym)
         Mix_Volume(viewer.fadChannel, 0);
         Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
         return rc;
+    }
     default:
         return true;
     }
