@@ -114,7 +114,7 @@ public:
 
     // Determines if an attack strikes its target
     // AP = Player attack power, DP = creature attack power, dd = creature damage
-    bool ATTACK(int AP, int DP, int DD);
+    bool ATTACK(int AP, int DP, int DD) const;
 
     // Calculates and assesses damage from a successful attack
     bool DAMAGE(int AP, int AMO, int APO,
@@ -210,6 +210,8 @@ private:
     // aborted by the user.
     // Returns true if the sound finished playing.
     bool playSound(int channel, Mix_Chunk* chunk, bool checkForDemoAbort = false) const;
+
+    dodBYTE exps[3];
 };
 
 #endif // DOD_PLAYER_HEADER

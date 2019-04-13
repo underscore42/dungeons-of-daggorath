@@ -41,11 +41,13 @@ Player::Player() : PPOW(PLRBLK.P_ATPOW),
     PPHO(PLRBLK.P_ATPHO),
     PPHD(PLRBLK.P_ATPHD),
     PDAM(PLRBLK.P_ATDAM),
-    turnDelay(20),
-    moveDelay(25),
+    turnDelay(125),
+    moveDelay(880),
     wizDelay(500)
 {
     Reset();
+
+    Utils::LoadFromHex(exps, "16F7B0");
 }
 
 void Player::Reset()
@@ -515,6 +517,7 @@ void Player::PATTK()
     if (!playSound(object.objChannel, object.objSound[U->obj_type], true))
         return;
 
+    // if player is using a ring decrement its charges by one
     if (U->obj_id >= Object::OBJ_RING_ENERGY && U->obj_id <= Object::OBJ_RING_FIRE)
     {
         if (!(g_cheats & CHEAT_RING))
@@ -546,6 +549,7 @@ void Player::PATTK()
 
     if (PTORCH == -1 || object.OCBLND[PTORCH].obj_id == Object::OBJ_TORCH_DEAD)
     {
+        // if it is dark we only have a one in four chance to hit
         if ((rng.RANDOM() & 3) != 0)
         {
             HUPDAT();
@@ -553,11 +557,11 @@ void Player::PATTK()
         }
     }
 
-    // make KLINK sound
+    // make KLINK sound to indicate a hit on creature
     if (!playSound(object.objChannel, klink, true))
         return;
 
-    viewer.OUTSTI(viewer.exps);
+    viewer.OUTSTI(exps);
 
     // do damage
     if (DAMAGE(PLRBLK.P_ATPOW, PLRBLK.P_ATMGO, PLRBLK.P_ATPHO,
@@ -571,6 +575,7 @@ void Player::PATTK()
         return;
     }
 
+    // creature killed, let the objects it carried drop to floor
     int optr = creature.CCBLND[cidx].P_CCOBJ;
     while (optr != -1)
     {
@@ -580,6 +585,7 @@ void Player::PATTK()
         optr = object.OCBLND[optr].P_OCPTR;
     }
 
+    // mark creature as dead
     --creature.CMXLND[creature.CMXPTR + creature.CCBLND[cidx].creature_id];
     creature.CCBLND[cidx].P_CCUSE = 0;
     viewer.PUPDAT();
@@ -588,10 +594,11 @@ void Player::PATTK()
     if (!playSound(object.objChannel, bang, true))
         return;
 
-    PPOW += (creature.CCBLND[cidx].P_CCPOW >> 3);
+    // increase player's power level
+    PPOW += creature.CCBLND[cidx].P_CCPOW >> 3;
     if ((PPOW & 0x8000) != 0)
     {
-        PPOW = 0x7FFF;
+        PPOW = 0x7FFF; // cap power level
     }
 
     if (creature.CCBLND[cidx].creature_id == Creature::CRT_WIZIMG)
@@ -683,10 +690,9 @@ void Player::PATTK()
     PLHAND = -1;
     game.INIVU();
     HUPDAT();
-    return;
 }
 
-bool Player::ATTACK(int AP, int DP, int DD)
+bool Player::ATTACK(int AP, int DP, int DD) const
 {
     int T0 = 15;
     int Dval = (DP - DD) * 4;
@@ -702,18 +708,17 @@ bool Player::ATTACK(int AP, int DP, int DD)
     }
     while (T0 > 0);
 
-    const int pidx = T0 - 3;
+    const int percentage_idx = T0 - 3;
     int adjust;
-    if (pidx > 0)
+    if (percentage_idx > 0)
     {
-        adjust = pidx * 10;
+        adjust = percentage_idx * 10;
     }
     else
     {
-        adjust = pidx * 25;
+        adjust = percentage_idx * 25;
     }
 
-    // FIXME shouldn't this calculation be done in dodBYTES?
     const int ret = rng.RANDOM() + adjust - 127;
 
     return ret >= 0;

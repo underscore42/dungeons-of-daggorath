@@ -309,7 +309,6 @@ Viewer::Viewer() : VCNTRX(128), VCNTRY(76)
     Utils::LoadFromHex(exam1, "625C0A2133049EF6FC");
     Utils::LoadFromHex(exam2, "56C72286959177F0");
     Utils::LoadFromHex(exam3, "408235C0235FC0");
-    Utils::LoadFromHex(exps, "16F7B0");
     Utils::LoadFromHex(LINES, "02020010FF10020088FF88");
 
     Reset();

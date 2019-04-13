@@ -239,7 +239,6 @@ public:
     dodBYTE     welcome1[14];
     dodBYTE     welcome2[20];
     dodBYTE     prepstr[6];
-    dodBYTE     exps[3];
     dodBYTE     exam1[9];
     dodBYTE     exam2[8];
     dodBYTE     exam3[7];
