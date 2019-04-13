@@ -14,7 +14,7 @@ is held by Douglas J. Morgan.
 //
 // This file contains common definitions of secondary objects
 // used in the game.  It gets included in nearly every other
-// file, so the SDL hearders are included here also.
+// file, so the SDL headers are included here also.
 
 #ifndef DOD_COMMON_HEADER
 #define DOD_COMMON_HEADER
@@ -59,51 +59,51 @@ typedef unsigned short  dodSHORT;
 class Coordinate
 {
 public:
-    Coordinate() : orgWidth(256.0), orgHeight(192.0),
-        curWidth(512.0), curHeight(384.0)
+    Coordinate() : orgWidth(256), orgHeight(192),
+        curWidth(512), curHeight(384)
     {}
 
     // Sets the data members based on screen width
     // (assumes a 4/3 width/height ratio)
-    void setCurWH(double W)
+    void setCurWH(int W)
     {
-        curWidth = ((int) W / (int) 256) * (int) 256;
-        curHeight = (curWidth * 0.75L);
+        curWidth = (W / 256) * 256;
+        curHeight = curWidth * 3 / 4;
         offX = (W - curWidth) / 2;
-        offY = (offX * 0.75L);
+        offY = offX * 3 / 4;
     }
 
     // Calculates absolute screen X-coordinate based on DoD X-coordinate
-    GLfloat newX(double orgX) const
+    float newX(float orgX) const
     {
-        return ((GLfloat) ((orgX) / orgWidth * curWidth) + (GLfloat) offX);
+        return (orgX / orgWidth * curWidth) + offX;
     }
 
     // Calculates relative screen X-coordinate based on DoD X-coordinate
-    GLfloat newXa(double orgX) const
+    float newXa(float orgX) const
     {
-        return ((GLfloat) ((orgX) / orgWidth * curWidth));
+        return orgX / orgWidth * curWidth;
     }
 
     // Calculates absolute screen Y-coordinate based on DoD Y-coordinate
-    GLfloat newY(double orgY) const
+    float newY(float orgY) const
     {
-        return ((GLfloat)  ((orgHeight - (orgY)) / orgHeight * curHeight) + (GLfloat) offY);
+        return ((orgHeight - orgY) / orgHeight * curHeight) + offY;
     }
 
     // Calculates relative screen Y-coordinate based on DoD Y-coordinate
-    GLfloat newYa(double orgY) const
+    float newYa(float orgY) const
     {
-        return ((GLfloat)  ((orgY) / orgHeight * curHeight));
+        return orgY / orgHeight * curHeight;
     }
 
 private:
-    double orgWidth;
-    double orgHeight;
-    double curWidth;
-    double curHeight;
-    double offX;    // offsets in case the screen dimension is not
-    double offY;    // an exact multiple of 256 or 192
+    const int orgWidth;
+    const int orgHeight;
+    int curWidth;
+    int curHeight;
+    int offX;    // offsets in case the screen dimension is not
+    int offY;    // an exact multiple of 256 or 192
 };
 
 // This class stores 32x32 row/column values
