@@ -475,13 +475,11 @@ bool OS_Link::handleConfigMenuSwitch(int menu_id, int item, menu Menu)
             {
                 case 0:
                     //Coco Speed
-                    creature.creSpeedMul = 100;
-                    creature.UpdateCreSpeed();
+                    creature.UpdateCreSpeed(100);
                     break;
                 case 1:
                     //Custom Speed
-                    creature.creSpeedMul = menu_scrollbar("CREATURE SPEED", 50, 200, creature.creSpeedMul);
-                    creature.UpdateCreSpeed();
+                    creature.UpdateCreSpeed(menu_scrollbar("CREATURE SPEED", 50, 200, creature.getCreatureSpeed()));
                     return false;
                 default:
                     return false;
@@ -728,7 +726,8 @@ void OS_Link::loadOptFile()
                 continue;
             }
 
-            if      (option == "creatureSpeed"         ) creature.creSpeedMul        = intval;
+            if (option == "creatureSpeed")
+                creature.UpdateCreSpeed(intval);
             else if (option == "volumeLevel"           ) volumeLevel                 = intval;
             else if (option == "windowMode"            ) mode                        = WindowMode(intval);
             else if (option == "screenWidth"           ) width                       = intval;
@@ -744,7 +743,6 @@ void OS_Link::loadOptFile()
 
     fin.close();
     scheduler.updateCreatureRegen(creatureRegen);
-    creature.UpdateCreSpeed();
 }
 
 bool OS_Link::saveOptFile() const
@@ -762,9 +760,7 @@ bool OS_Link::saveOptFile() const
     if(!fout)
         return false;
 
-    fout << "creatureSpeed=" << creature.creSpeedMul << endl;
-    fout << "turnDelay=" << player.turnDelay << endl;
-    fout << "moveDelay=" << player.moveDelay << endl;
+    fout << "creatureSpeed=" << creature.getCreatureSpeed() << endl;
     fout << "volumeLevel=" << volumeLevel << endl;
     fout << "windowMode=" << mode << endl;
     fout << "screenWidth=" << width << endl;
@@ -799,8 +795,7 @@ bool OS_Link::saveOptFile() const
 void OS_Link::loadDefaults()
 {
     volumeLevel = MIX_MAX_VOLUME;
-    creature.creSpeedMul = 100;
-    creature.UpdateCreSpeed();
+    creature.UpdateCreSpeed(100);
     mode = WINDOWED;
     width = 1024;
     height = 768;

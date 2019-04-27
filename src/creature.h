@@ -52,8 +52,11 @@ public:
     // else returns -1.
     int CFIND2(RowCol rc) const;
 
+    // Returns creature speed multiplier
+    int getCreatureSpeed() const { return creSpeedMul; }
+
     // Update creature speed
-    void UpdateCreSpeed();
+    void UpdateCreSpeed(int newSpeed);
 
     // All creatures in the current level
     CCB CCBLND[32];
@@ -75,9 +78,6 @@ public:
     // Sound channels
     const int creChannel;
     const int creChannelv;
-
-    // Creature speed multiplier
-    int creSpeedMul;
 
     enum creature_type_t : dodBYTE
     {
@@ -110,6 +110,9 @@ private:
 
     // All creature types and their stats
     CDB CDBTAB[12];
+
+    // Creature speed multiplier
+    int creSpeedMul;
 };
 
 #endif // DOD_CREATURE_HEADER
