@@ -1,0 +1,2 @@
+#define DOD_VERSION "@dod_version@"
+#define DOD_ASSET_PATH "@dod_asset_path@"
