@@ -40,17 +40,6 @@ public:
     // 3D/Examine-Status-Text Area.
     void draw_game();
 
-    // This is the renderer method used to do the wizard fade in/out. It's only
-    // used during the opening. It is syncronized with the 30Hz buzz and the
-    // wizard crashing sound.
-    bool draw_fade();
-
-    // Same as above, but used for the intermission
-    void enough_fade();
-
-    // Same as above, but used for death & victory
-    void death_fade(const int* WIZ);
-
     // Display various messages
     void displayCopyright();
     void displayWelcomeMessage();
