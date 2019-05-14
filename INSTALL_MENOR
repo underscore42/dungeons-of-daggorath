@@ -1,0 +1,23 @@
+Installation toolchain for a stock ubuntu 16.04 image:
+
+  sudo apt-get install libsdl2-dev
+  sudo apt-get install libsdl2-mixer-dev
+  sudo add-apt-repository ppa:jonathonf/meson
+  sudo apt update; sudo apt dist-upgrade
+  sudo apt install meson
+
+Build your meson files:
+
+cd into your base directory
+  meson . builddir/
+
+Do the build:
+
+  cd builddir/
+  ninja
+
+That's about it, you can find the resulting binary in ./dungeons-of-daggorath/builddir/src
+
+I just copy that up to the top level, so it finds the sounds, conf and saved directories.
+
+
