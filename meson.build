@@ -1,4 +1,4 @@
-project('dungeons-of-daggorath', 'cpp', version: '0.6-dev', default_options: ['cpp_std=c++17'])
+project('dungeons-of-daggorath', 'cpp', version: '0.6-dev', default_options: ['cpp_std=c++14'])
 
 conf_data = configuration_data()
 conf_data.set('dod_version', meson.project_version())

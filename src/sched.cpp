@@ -27,6 +27,7 @@ using namespace std;
 #include "viewer.h"
 #include "oslink.h"
 #include "creature.h"
+#include "parser.h"
 #include "dodgame.h"
 #include "dungeon.h"
 #include "object.h"

@@ -116,13 +116,13 @@ public:
     };
 
     // The prompt '._'
-    static constexpr dodBYTE M_PROM1[5] = {I_CR, I_DOT, I_BAR, I_BS, I_NULL};
+    dodBYTE M_PROM1[5] = {I_CR, I_DOT, I_BAR, I_BS, I_NULL};
 
     // The cursor '_'
-    static constexpr dodBYTE M_CURS[3] = {I_BAR, I_BS, I_NULL};
+    dodBYTE M_CURS[3] = {I_BAR, I_BS, I_NULL};
 
     // Used when player presses backspace
-    static constexpr dodBYTE M_ERAS[6] = {I_SP, I_BS, I_BS, I_BAR, I_BS, I_NULL};
+    dodBYTE M_ERAS[6] = {I_SP, I_BS, I_BS, I_BAR, I_BS, I_NULL};
 
     // The three ? that get printed to indicate an input error
     dodBYTE CERR[3];

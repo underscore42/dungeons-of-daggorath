@@ -66,9 +66,9 @@ public:
     dodBYTE GENTAB[30];
 
     // weights for the six object classes
-    static constexpr int OBJWGT[6] = {0x05, 0x01, 0x0A, 0x19, 0x19, 0x0A};
+    int OBJWGT[6] = {0x05, 0x01, 0x0A, 0x19, 0x19, 0x0A};
 
-    static constexpr int objChannel = 1;
+    int objChannel = 1;
     Mix_Chunk * objSound[6];
 
     enum object_type_t
@@ -131,7 +131,7 @@ private:
     // Unrevealed objects behave like their most basic instance, i.e. a bronze
     // shield behaves like a leather shield. This array maps all object classes
     // to their basic instance.
-    static constexpr dodBYTE GENVAL[6] = {0xFF, 0xFF, 0xFF, 0x10, 0x11, 0x0F};
+    dodBYTE GENVAL[6] = {0xFF, 0xFF, 0xFF, 0x10, 0x11, 0x0F};
 };
 
 #endif // DOD_OBJECT_HEADER

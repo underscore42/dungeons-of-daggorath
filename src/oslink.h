@@ -20,73 +20,49 @@ is held by Douglas J. Morgan.
 #ifndef OS_LINK_HEADER
 #define OS_LINK_HEADER
 
-#include <string>
-
 #include "dod.h"
 #include "parser.h"
 
+// Arbitrary Length of 80, maybe be changed if needed
+#define MAX_FILENAME_LENGTH 80
 class OS_Link
 {
 public:
-
+    // Constructor
     OS_Link();
 
-    // main entry point for dod application
-    void init();
-
-    // Quits application and shuts down SDL before exiting
-    void quitSDL(int code);
-
-    // Used to check for keystrokes and application termination
-    void process_events();
-
-    // Implements the menu, and dispatches commands
-    // Returns: true  - If a new game is started
-    //          false - otherwise
-    bool main_menu();
-
-    // Function used to save the options file from current settings
-    // Returns: true - file saved successfully, false - file not saved
-    bool saveOptFile() const;
-
-    // builds up the filename of the savegame to load/save
+    // Public Interface
+    void init();            // main entry point for dod application
+    void quitSDL(int code); // shuts down SDL before exiting
+    void process_events();  // used mainly to retrieve keystrokes
+    bool main_menu();       // used to implement the meta-menu
+    bool saveOptFile(void);
     void buildSaveGamePath();
 
-    // the application window
+    // Public Data Fields
     SDL_Window* window;
+    int     width;  // actual screen width after video setup
+    int     height; // same for height
+    int     windowed_width;  // width when we were last in windowed mode
+    int     windowed_height; // height when we were last in windowed mode
+    int     volumeLevel; // Volume level
 
-    // actual screen width after video setup
-    int width;
-
-    // actual screen height after video setup
-    int height;
-
-    // width when we were last in windowed mode
-    int windowed_width;
-
-    // height when we were last in windowed mode
-    int windowed_height;
-
-    // Audio volume level
-    int volumeLevel;
-
+    static constexpr size_t pathSepLen = 2;
+    static constexpr size_t gamefileLen = MAX_FILENAME_LENGTH + pathSepLen + Parser::MAX_TOKENLEN + 5; //  + 5 because we need to append ".dod\0"
     static constexpr size_t keyLen = 256;
 
-    // Maps a pressed key to a character that is put into the game's keyboard buffer
+    char    gamefile[gamefileLen]; // current savefile that we're loading or saving
+    char    pathSep[2];
+
+    char    confDir[5];
+    char    soundDir[6];
+    char    savedDir[MAX_FILENAME_LENGTH + 1];
     dodBYTE keys[keyLen];
 
-    int    audio_rate;
-    Uint16 audio_format;
-    int    audio_channels;
-    int    audio_buffers;
-
-    // current savefile that we're loading or saving
-    std::string gamefile;
-
-    const std::string dod;
-    const std::string confDir;
-    const std::string savedDir;
-    const std::string soundDir;
+    int     audio_rate;
+    Uint16  audio_format;
+    int     audio_channels;
+    int     audio_buffers;
 
 private:
 
@@ -97,72 +73,22 @@ private:
         FULLSCREEN = 2
     };
 
-    std::string buildConfigPath() const;
-    std::string buildSavePath() const;
-
-    // Processes key strokes.
-    void handle_key_down(SDL_Keysym * keysym);
-
-    // Function used to draw a list, move among that list, and return the item selected
-    // Arguments: x        - The top-left x-coordinate to draw list at
-    //            y        - The top-left y-coordinate to draw list at
-    //            title    - The title of the list
-    //            list     - An array of strings (the list to be chosen from
-    //            listSize - The size of the array
-    // Returns: -1 if ESC was pressed else the index of the selected element
-    int menu_list(int x, int y, const char *title, const char *list[], int listSize);
-
-    // Function used to draw a scrollbar, and return the value
-    // Arguments: title   - The title of the entry
-    //            min     - The minimum value the scroll bar can take
-    //            max     - The maximum value the scroll bar can take
-    //            current - The current position of the scrollbar
-    // Returns: The value the user entered, or if they hit escape, the original
-    //          value.
-    int menu_scrollbar(const char *title, int min, int max, int current);
-
-    // Loads options from config file
-    void loadOptFile();
-
-    // Sets default option values
-    void loadDefaults();
-
-    // Creates the application window and the OpenGL context
-    // Arguments: width  - initial width of window
-    //            height - initial height of window
+    // Internal Implementation
+    void handle_key_down(SDL_Keysym * keysym);  // keyboard handler
+    bool menu_return(int, int, menu);       // Used by main menu
+    int  menu_list(int x, int y, const char *title, const char *list[], int listSize);
+    void menu_string(char *newString, const char *title, size_t maxLength);
+    int  menu_scrollbar(const char *title, int min, int max, int current);
+    void loadOptFile(void);
+    void loadDefaults(void);
     void createWindow(int width, int height);
-
-    // Function used to swap fullscreen mode
-    // Arguments: newmode - the new window mode
     void changeWindowMode(WindowMode newmode);
-
-    // Function used to change the video resolution
-    // Arguments: newWidth  - desired screen width
-    //            newHeight - desired screen height
     void changeVideoRes(int newWidth, int newHeight);
 
-    // Function to process menu commands
-    // Returns: false - if menu should be redrawn
-    //          true  - otherwise
-    bool menu_return(int, int, menu);
-
-    // handle the file menu
-    bool handleFileMenuSwitch(int menu_id, int item, menu Menu);
-
-    // handle the config menu
-    bool handleConfigMenuSwitch(int menu_id, int item, menu Menu);
-
-    // handle the help menu
-    bool handleHelpMenuSwitch(int menu_id, int item, menu Menu);
-
-    // OpenGL context
+    // Data Fields
     SDL_GLContext oglctx;
-
-    // current window mode
-    WindowMode mode;
-
-    // Creature Regen Speed
-    int creatureRegen;
+    WindowMode    mode;
+    int           creatureRegen; // Creature Regen Speed
 };
 
 #endif // OS_LINK_HEADER

@@ -66,13 +66,12 @@ void Creature::Reset()
         Utils::LoadFromDecDigit(CMXLND, "994200000000240666000000000406840010000000866400222222244801");
 }
 
-void Creature::UpdateCreSpeed(int newSpeed)
+void Creature::UpdateCreSpeed()
 {
-    creSpeedMul = newSpeed;
     for (int ccc = 0; ccc < 12; ++ccc)
     {
-        CDBTAB[ccc].P_CDTMV = ((int)((float)CDBTAB[ccc].P_CDTMV * 100.0f / (float)creSpeedMul));
-        CDBTAB[ccc].P_CDTAT = ((int)((float)CDBTAB[ccc].P_CDTAT * 100.0f / (float)creSpeedMul));
+        CDBTAB[ccc].P_CDTMV = ((int)((float)CDBTAB[ccc].P_CDTMV * (float)creSpeedMul / 100.0f));
+        CDBTAB[ccc].P_CDTAT = ((int)((float)CDBTAB[ccc].P_CDTAT * (float)creSpeedMul / 100.0f));
     }
 }
 

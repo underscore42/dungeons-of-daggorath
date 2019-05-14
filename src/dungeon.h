@@ -90,7 +90,7 @@ public:
     RowCol  DROW;
 
     // Step table as row col pairs.
-    static constexpr int STPTAB[8] = {
+    int STPTAB[8] = {
         -1,  0, // North
          0,  1, // East
          1,  0, // South
@@ -147,17 +147,17 @@ private:
     bool VFINDsub(dodBYTE & a, int & u, const RowCol& rc) const;
 
     // Mask values for walls
-    static constexpr dodBYTE MSKTAB[4] = {0x03, 0x0C, 0x30, 0xC0};
+    dodBYTE MSKTAB[4] = {0x03, 0x0C, 0x30, 0xC0};
 
     // Door mask values
-    static constexpr dodBYTE DORTAB[4] = {HF_DOR, HF_DOR << 2, HF_DOR << 4, HF_DOR << 6};
+    dodBYTE DORTAB[4] = {HF_DOR, HF_DOR << 2, HF_DOR << 4, HF_DOR << 6};
 
     // Secret door mask values
-    static constexpr dodBYTE SDRTAB[4] = {HF_SDR, HF_SDR << 2, HF_SDR << 4, HF_SDR << 6};
+    dodBYTE SDRTAB[4] = {HF_SDR, HF_SDR << 2, HF_SDR << 4, HF_SDR << 6};
 
     // How to display horizontal features in the printMaze method
-    static constexpr char NS[4] = {' ', '-', '=', '-'};
-    static constexpr char EW[4] = {' ', '|', ')', '|'};
+    char NS[4] = {' ', '-', '=', '-'};
+    char EW[4] = {' ', '|', ')', '|'};
 };
 
 
