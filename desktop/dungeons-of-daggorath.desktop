@@ -1,0 +1,7 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Dungeons of Daggorath
+Comment=Tandy TRS-80 Game
+Exec=/home/gandalf/practice/dungeons-of-daggorath/dod.sh
+Icon=/home/gandalf/practice/dungeons-of-daggorath/dod.png
+Type=Application
